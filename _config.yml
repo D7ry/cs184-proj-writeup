@@ -1,3 +1,4 @@
 theme: jekyll-theme-cayman
 include:
   - proj1\writeup.md
+markdown: kramdown
