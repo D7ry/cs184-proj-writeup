@@ -365,7 +365,7 @@ As discussed in part 5, texture sampling can have artifacts at high frequency ar
 The idea behind level sampling is simple: instead of sampling from the highest resolution texture all the time(as in part 5), we sample from a down-sampled version of the texeture(A.K.A. mipmap) depending on the distance between the pixel and the camera. This gives 3 main benefits:
 1. Performance. Sampling from a lower resolution texture is much faster than sampling from a higher resolution texture.
 2. Visual quality. Sampling from a lower resolution texture can reduce the artifacts caused by high frequency areas, which has been pre-processed during the compression where high-frequency areas are filtered and blended.
-3. Memory. Lower-resolution textures simply takes up less memory, however, storing mipmap costs an additional of  1/3 of the original texture's memory.
+3. Memory. Lower-resolution textures simply takes up less memory, however, storing mipmap costs an additional of  1/3 of the original texture's space.
 
 ### Implementation
 To accomdate for 6 differnt combination of level sampling, `Texture::sample()` has been restructured:
