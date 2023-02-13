@@ -1,8 +1,9 @@
+src: https://github.com/D7ry/cs184-proj-writeup/blob/master/proj1/writeup.md
 <h1 align="center">CS 184: Computer Graphics and Imaging, Spring 2023</h1>
 <h1 align="center">Project 1: Rasterizer</h1>
 
 # Overview
-In this project, our group built a functional rasterizer that supports 2D textured geometries. The rasterizer also support features such as super-sampling and 2D transformations. 
+In this project, our group built a functional rasterizer that supports 2D textured geometries. The rasterizer also supports features such as super-sampling and 2D transformations. 
 
 In addition, the user could choose from 3 different mipmap texture sampling methods, as well as 2 different pixel sampling methods.
 
@@ -28,7 +29,7 @@ Class Triangle_2D
 };
 ```
 `Triangle_2D` takes in 6 coordinates to construct.
-I've also defined a sub-struct Edge, which simply contains 2 vectors, and a lineNormal of the edge, calculated at initialization and will be used for Rasterization.
+I've also defined a sub-struct Edge, which simply contains 2 vectors, and a line normal of the edge, calculated at initialization and will be used for Rasterization.
 ```cpp
 enum GeometricRelation
 {
@@ -53,29 +54,29 @@ With the above abstraction, later tasks are much more modular and easier to impl
 Implementation 1 is simple; it involves the following steps:
 1. Calculate the bounding box of the triangle; cached in `float minX, minY, maxX, maxY;` of the `Triangle_2D` class.
 2. For each pixel in the bounding box, perform a 3-plane test, done as follows:
-	- Triangle's `Edge` structs has function `getGeometricRelation(float a_x, float a_y)` which outputs whether the absolute coordinate(A_X, A_Y) is inside/outside/on the halfplane constructed by the edge.
-	- The triangle will invoke each of the 3 edge's `getGeometricRelation()`, which checks the sign of the dot product of the edge's line normal and the point vector; if all geometric relations indicates that the point is inside the half-plane, the point is inside.
+	- Triangle's `Edge` structs has the function `getGeometricRelation(`float a_x, float a_y)` which outputs whether the absolute coordinate(A_X, A_Y) is inside/outside/on the halfplane constructed by the edge.
+	- The triangle will invoke each of the 3 edge's `getGeometricRelation()`, which checks the sign of the dot product of the edge's line normal and the point vector; if all geometric relations indicate that the point is inside the half-plane, the point is inside.
 3. If the pixel is inside the triangle, color it onto the sampling buffer.
 
-Implementation 1 is **no worse than** sampling every triangle in the triangle bounding box, because it does exactly that.  
+Implementation 1 is **no worse than** sampling every triangle in the triangle bounding box because it does exactly that.  
 
 Here's an image rendered using implementation 1:
 <div align="center"><img src = "images/P1_Result.png" width="60%"/></div>
 
 ### Implementation 2: 2D Raycasting
 
-Implementation 2 differes from implementation 1 in that it only samples 2 precise points for each sample unit, then fills in the pixels in between without sampling.  
+Implementation 2 differs from implementation 1 in that it only samples 2 precise points for each sample unit, then fills in the pixels without sampling.  
 The detailed algorithm goes as follows:
-1. Compare triangle's bounding box's width and height, if width > height, proceed to do vertical raycasts, else, proceed to do horizontal raycasts.
-2. Start from on side of the bounding box, and keep doing raycasts vertically/horizontally until reaching the other side of the box; this is implemented through `Triangle_2D::getVerticalRayHit`and `Triangle_2D::getHorizontalRayHit`, which  looks for the intersection between pairs of linear functions.
+1. Compare the triangle's bounding box's width and height, if width > height, proceed to do vertical ray casts, else, proceed to do horizontal raycasts.
+2. Start from one side of the bounding box, and keep doing raycasts vertically/horizontally until reaching the other side of the box; this is implemented through `Triangle_2D::getVerticalRayHit`and `Triangle_2D::getHorizontalRayHit`, which looks for the intersection between pairs of linear functions.
 
 Here is a graphical illustration of the algorithm:
 <div align="center">
 <img src="images/P1_RayCasting.png" width="60%" text-align = "center"></img>
-<figcaption align = "center">the left image has smaller width than height, which is why the rays are cast vertically.</figcaption>
+<figcaption align = "center">the left image has a smaller width than height, which is why the rays are cast vertically.</figcaption>
 </div>
 
-Theoretically, this implementation has O(n) speed with n being min(width, height) of the triangle's bounding box, compared to O(n<sup>2</sup>) complexity of implementation 1. The performance improvement is most noticeable under bigger resolutions.  
+Theoretically, this implementation has O(n) speed with n being the min(width, height) of the triangle's bounding box, compared to the O(n2</sup>) complexity of implementation 1. The performance improvement is most noticeable under bigger resolutions.  
 
 Here is a timing comparison(in ticks) between the 2 implementations, both rendering test3, the dragon svg file, under 2560*1440 resolution.  
 The numbers below are the differences in `std::clock()` before and after `DrawRend::redraw()` invokes `SVG::draw()`.
@@ -110,16 +111,16 @@ Rasterization by sampling inevitably causes jaggies and artifacts around high-fr
 
 ### Implementation
 
-Without super-sampling, the rasterizer's `sample_buffer` is as large as frame buffer, and drawing onto the frame-buffer is a 1-1 mapping process. The rasterization pipeline before SS works as follows:
+Without super-sampling, the rasterizer's `sample_buffer` is as large as the frame buffer, and drawing onto the frame buffer is a 1-1 mapping process. The rasterization pipeline before SS works as follows:
 1. Sample pixels from the triangle using either implementation described in Part 1.
 2. Draw the sample buffer onto the frame buffer 1-on-1 at `RasterizerImp::resolve_to_framebuffer()`.
 
-To achieve SS, first we scale the width and height of the `sample_buffer` by the square root of `sample_rate`,
+To achieve SS, first, we scale the width and height of the `sample_buffer` by the square root of `sample_rate`,
 which made the sample buffer able to contain sample_rate times framebuffer worth of pixels. Algorithmically, this is done by calling `samlpe_buffer.resize(width * height * sample_rate)`, as `samlpe_buffer` is stored as a 1D vector.
 
-The pipeline now looks like this, green highlighted being the added steps:
+The pipeline now looks like this, with green highlighted being the added steps:
 1. <span style="color:green;">Scale up the size of sample_buffer by sample_rate.</span>
-2. <span style="color:green;">Before initialing <code>Triangle_2D</code>, scale up the coordinates of the triangle, each by sqrt(sample_rate)</span>
+2. <span style="color:green;">Before initializing <code>Triangle_2D</code>, scale up the coordinates of the triangle, each by sqrt(sample_rate)</span>
 3. Sample pixels from the triangle using either implementation described in Part 1.
 4. <span style="color:grey;"><s>Draw the sample buffer onto the frame buffer 1-on-1.</s></span>
 5. <span style="color:green;">For each pixel to be drawn to the frame buffer, look for the corresponding <code>sample_rate</code> times as many pixels from the sample buffer, and draw the average of the sample pixels' colors onto the frame buffer.
@@ -168,14 +169,14 @@ The following are images rendered without SS and with incrementing levels of SS,
   </table>
 </div>
 
-The result of the supersized-averaged-downsized image has much smoother edges. This is because pixels on the frame buffer now conveys a much more accurate representation of the original geometry, taking into account the average of details missed in none-SS rasterizations, such as the sharp triangular edge that no-ss rasterization lacked the precision to sample.
+The result of the supersized-averaged-downsized image has much smoother edges. This is because pixels on the frame buffer now convey a much more accurate representation of the original geometry, taking into account the average of details missed in none-SS rasterizations, such as the sharp triangular edge that no-ss rasterization lacked the precision to sample.
 
 ### Part 3: Transforms
 
-Transforms allow creators to easily manipulate geometries, creating different combinations. Here is a transformed cubeman:
+Transforms allow creators to easily manipulate geometries, creating different combinations. Here is a transformed cube man:
 
 <div align = "center"><img src="images/P3_NoSkipLegDay.png" width="50%"></img>
-  <figcaption>The cubeman is waving his hand saying hello, which is done by rotating and translating both arms in opposite directions.<br> The cubeman's legs are also scaled up because he never skips leg day.</figcaption>
+  <figcaption>The cube man is waving his hand saying hello, which is done by rotating and translating both arms in opposite directions.<br> The cubeman's legs are also scaled up because he never skips leg day.</figcaption>
 </div>
 
 # Section II: Sampling
@@ -197,8 +198,8 @@ To avoid repetitive code.
 
 ## Part 4: Barycentric coordinates
 
-Simply put, the barycentric coordinates of a triangle is a 3-dimensional coordinate system to express the relative position of a point, usually within the triangle.  
-The three coordinates are alpha, beta, and gamma, the sum of which is always 1; in addition, the sum of baricentric coordinates multiplied by the corresponding vertex's coordinates is always the point's absolute position.  
+Simply put, the barycentric coordinates of a triangle are a 3-dimensional coordinate system to express the relative position of a point, usually within the triangle.  
+The three coordinates are alpha, beta, and gamma, the sum of which is always 1; in addition, the sum of barycentric coordinates multiplied by the corresponding vertex's coordinates is always the point's absolute position.  
 
 Here is an optimized algorithm to calculate the barycentric coordinates of a point within a triangle:
 ```cpp
@@ -233,13 +234,13 @@ Triangle_2D::Triangle_2D(...) {
 }
 ```
 
-Barycentric coordinates are especially useful in texture & color blending. For example, in the following triangle, each vertex has their distinct color of either R,G,or B. Every pixel is colored based on their corresponding coordinates: the closer the pixel is to one vertex(the bigger the corresponding coordinate is), the more of the color of that edge is blended into the pixel. The result is a triangle of smoothly blended color:
+Barycentric coordinates are especially useful in texture & color blending. For example, in the following triangle, each vertex has its distinct color of either R, G, or B. Every pixel is colored based on its corresponding coordinates: the closer the pixel is to one vertex(the bigger the corresponding coordinate is), the more of the color of that edge is blended into the pixel. The result is a triangle of smoothly blended color:
 
 <div align="center">
   <image src="images/P4_Triangle.png" width="50%"></image>
 </div>
 
-A closer look at the coloring algorithm looks as follow:
+A closer look at the coloring algorithm looks as follows:
 ```cpp
 Color c1, c2, c3; // colors of the vertices
 auto getInterpolatedColor = [c0, c1, c2](int x, int y, Triangle_2D* t) -> Color {
@@ -252,10 +253,10 @@ auto getInterpolatedColor = [c0, c1, c2](int x, int y, Triangle_2D* t) -> Color 
 
 ## Part 5: "Pixel sampling" for texture mapping
 
-2D models are simply polygons. One could fill in colors to the polygon, but the polygon still appears to be but a geometry. Think of polygon as a "canvas"; the artist needs to print as much detail as possible onto the canvas to make it look like a real object. Instead of painting onto the "canvas" pixel by pixel, we first create a new reference painting,
+2D models are simply polygons. One could fill in colors to the polygon, but the polygon still appears to be but a geometry. Think of a polygon as a "canvas"; the artist needs to print as much detail as possible onto the canvas to make it look like a real object. Instead of painting onto the "canvas" pixel by pixel, we first create a new reference painting,
 **texture**, and then print the texture onto the model.
 
-Separating model from texture allows the model to be easily scalable and modifiable, using algorithm to adapt models of different sizing to the same texture; the process of adapting the texture to the model is called **texture mapping**.  
+Separating the model from the texture allows the model to be easily scalable and modifiable, using algorithms to adapt models of different sizing to the same texture; the process of adapting the texture to the model is called **texture mapping**.  
 
 Adapting texture to model is analogous to adapting geometry to screen space, the latter is done through **rasterization** by sampling, and the former has a more direct name: **pixel sampling**.  
 
@@ -271,7 +272,7 @@ While nearest neighbor directly samples the point on texture closest to the give
 #### Getting UV coordinates
 As discussed above, to obtain UV coordinates, first we obtain the barycentric coordinates of the pixel using the member function `Triangle_2D::getBarycentricCoords(float a_x, float a_y, float& r_alpha, float& r_beta, float& r_gamma)`  
 
-To convert the barycentric coords into UV coords, we perform a blending algorithm similar to color blending discussed in part 4, where we multiple the UV coodinates of each vertex by the corresponding barycentric coordinate, and then sum them up:
+To convert the barycentric coords into UV coords, we perform a blending algorithm similar to color blending discussed in part 4, where we multiply the UV coordinates of each vertex by the corresponding barycentric coordinate, and then sum them up:
 
 ```cpp
 void RasterizerImp::Triangle_2D::getUV(float a_x, float a_y, Vector2D& r_uv)
@@ -284,7 +285,7 @@ void RasterizerImp::Triangle_2D::getUV(float a_x, float a_y, Vector2D& r_uv)
 
 Once we have the UV coordinates, proceed to the next stage of the pipeline by calling `Texture::sample()` with the UV coordinates as a part of the argument.  
 
-`Texture::sample()` then invokes different sampling methods: nearest neithbor and bilinear interpolation, depending on the setting. Note that regardless of the pixel sampling method, we will always be sampling once from the highest resolution texture(mipmap level 0); More sophisticated level sample methods will be discussed in Part 6.
+`Texture::sample()` then invokes different sampling methods: nearest neighbor and bilinear interpolation, depending on the setting. Note that regardless of the pixel sampling method, we will always be sampling once from the highest resolution texture(mipmap level 0); More sophisticated level sample methods will be discussed in Part 6.
 
 #### Impl: Nearest Neighbor
 
@@ -299,7 +300,7 @@ Color Texture::sample_nearest(Vector2D uv, int level) {
 
 #### Impl: Bilinear Interpolation
 
-As discussed above, bilinear interpolation samples the four points closest to the UV coordinate, and then blends the colors of the four points together through lerping.  
+As discussed above, bilinear interpolation samples the four points closest to the UV coordinate and then blends the colors of the four points through lerping.  
 
 ```cpp
 Color Texture::sample_bilinear(Vector2D uv, int level) {
@@ -319,7 +320,7 @@ Color Texture::sample_bilinear(Vector2D uv, int level) {
 ```
 ### Results and Comparison
 
-The following are four screenshots generated using nearest sampling and bilinear sampling at different SS levels, which illustrates their differences:  
+The following are four screenshots generated using nearest sampling and bilinear sampling at different SS levels, which illustrate their differences:  
 
 <div align="center">
   <table style="width=100%">
@@ -349,26 +350,26 @@ The following are four screenshots generated using nearest sampling and bilinear
 
 As shown through the pixel inspector, regardless of the SS rate, bilinear interpolation delivers a much smoother longitudinal&latitudial line.  
 
-Under native resolution, the lines are intermittent points under nearest neighbor sampling, but bilinear interpolation method successfully renders the contour of the lines.  
+Under the native resolution, the lines are intermittent points under nearest neighbor sampling, but the bilinear interpolation method successfully renders the contour of the lines.  
 
-Bilinear interpolation still wins under higher sampling rate; the lines it renders are less jagged than the counterpart.  
+Bilinear interpolation still wins under a higher sampling rate; the lines it renders are less jagged than the counterpart.  
 
 Looking at the overall picture, bilinear interpolation renders a much smoother image.  
 Their differences are most noticeable at places where texture color changes abruptly: e.g. near a thin line like the longitudinal&latitudinal line.  
 
-The rationale behind is similar to the anti-aliasing technique: the lower the frequency achived using blending, the smoother the jags-usually occuring at high frequency areas-are rendered.
+The rationale behind is similar to the anti-aliasing technique: the lower the frequency achieved using blending, the smoother the jags-usually occurring at high-frequency areas-are rendered.
 
 ## Part 6: "Level sampling" with mipmaps for texture mapping
 
-As discussed in part 5, texture sampling can have artifacts at high frequency areas for which the model has less than enough pixels to sample. We've discussed 2 ways to minimize the artifacts: super-sampling and interpolated pixel sampling. "Level sampling" is a third way to do so, which comes with its own set of advantages and drawbacks.  
+As discussed in part 5, texture sampling can have artifacts at high-frequency areas for which the model has less than enough pixels to sample. We've discussed 2 ways to minimize the artifacts: super-sampling and interpolated pixel sampling. "Level sampling" is a third way to do so, which comes with its own set of advantages and drawbacks.  
 
-The idea behind level sampling is simple: instead of sampling from the highest resolution texture all the time(as in part 5), we sample from a down-sampled version of the texeture(A.K.A. mipmap) depending on the distance between the pixel and the camera. This gives 3 main benefits:
-1. Performance. Sampling from a lower resolution texture is much faster than sampling from a higher resolution texture.
-2. Visual quality. Sampling from a lower resolution texture can reduce the artifacts caused by high frequency areas, which has been pre-processed during the compression where high-frequency areas are filtered and blended.
-3. Memory. Lower-resolution textures simply takes up less memory, however, storing mipmap costs an additional of  1/3 of the original texture's space.
+The idea behind level sampling is simple: instead of sampling from the highest resolution texture all the time(as in part 5), we sample from a down-sampled version of the texture (A.K.A. mipmap) depending on the distance between the pixel and the camera. This gives 3 main benefits:
+1. Performance. Sampling from a lower-resolution texture is much faster than sampling from a higher-resolution texture.
+2. Visual quality. Sampling from a lower resolution texture can reduce the artifacts caused by high-frequency areas, which have been pre-processed during the compression where high-frequency areas are filtered and blended.
+3. Memory. Lower-resolution textures simply take up less memory, however, storing mipmap costs an additional 1/3 of the original texture's space.
 
 ### Implementation
-To accomdate for 6 differnt combination of level sampling, `Texture::sample()` has been restructured:
+To accommodate for 6 different combinations of level sampling, `Texture::sample()` has been restructured:
 ```cpp
 Color Texture::sample(const SampleParams& sp) {
   switch (sp.lsm) {
@@ -403,7 +404,7 @@ Color Texture::sample(const SampleParams& sp) {
 ```
 
 #### Getting mipmap level
-Regardless of the specific texture sampling method we use, first we need to approximate the nearest mipmap level to the pixel by calculating the texture footpring. To do so, we calculate the UV of points next to the point to be sampled, and approximate the delta UV.   
+Regardless of the specific texture sampling method we use, first, we need to approximate the nearest mipmap level to the pixel by calculating the texture footprint. To do so, we calculate the UV of points next to the point to be sampled and approximate the delta UV.   
 
 This is done at the rasterizer part of the pipeline, where we have access to the triangle's UV coordinates:
 
@@ -425,7 +426,7 @@ auto getTexture = [tex, sp](double x, double y, Triangle_2D* t) mutable -> Color
 };
 ```
 
-In the texture sampler part of the pipeline, we take the texture foorptint and, using the scaled UV, calculate the mipmap level with the normalized UV:
+In the texture sampler part of the pipeline, we take the texture footprint and, using the scaled UV, calculate the mipmap level with the normalized UV:
 
 ```cpp
 float Texture::get_level(const SampleParams& sp) {
@@ -448,8 +449,9 @@ float Texture::get_level(const SampleParams& sp) {
 
 The level of the returned function is not rounded for bilinear level sampling, which will be discussed later.
 
-#### Nearest Level
-Nearest level sampling is implemented same as 0th-level sampling. The texture sampler takes the output of `get_level()` and samples from the mipmap of corresponding level. `get_texel()` provides a nice abstraction so we don't need to worry about mipmap's width and height.
+#### Nearest Level  
+
+Nearest-level sampling is implemented the same as 0th-level sampling. The texture sampler takes the output of `get_level()` and samples from the mipmap of the corresponding level. `get_texel()` provides a nice abstraction so we don't need to worry about mipmap's width and height.
 
 ```cpp
 case LevelSampleMethod::L_NEAREST:
@@ -465,7 +467,7 @@ break;
 ```
 
 #### Bilinear Interpolated Level
-Bilinear interpolated level sampling works analogously to that of pixel sampling.Intead of sampling from a single texel, we sample from 2 adjacent texels in the mipmap level, and interpolate the result using `lerp()`:
+Bilinear interpolated level sampling works analogously to that pixel sampling. Instead of sampling from a single texel, we sample from 2 adjacent texels in the mipmap level, and interpolate the result using `lerp()`:
 ```cpp
 case LevelSampleMethod::L_LINEAR: // most mind-boggling one
 {
@@ -487,13 +489,13 @@ return lerp(c0, c1, level - l0);
 ```
 Bilinear level sampling can be further combined with bilinear texture sampling, leading the trilinear sampling with the best quality at the cost of performance.
 
-To compare and contrast pixel sampling, level sampling, and super sampling:
+To compare and contrast pixel sampling, level sampling, and supersampling:
 
-Super sampling achieves the best quality by compressing multiple pixels into one at the most performance cost.
+Supersampling achieves the best quality by compressing multiple pixels into one at the most performance cost.
 
 Bilinear pixel sampling is less performance intensive by sampling from 4 adjacent texels; it provides some quality improvement over nearest pixel sampling.
 
-Level sampling(nearest/bilinear) is the best of both worlds: it provides a decent quality improvement over bilinear pixel sampling, and is less performance intensive than super sampling. It takes extra space to store the mipmap, but saves unnecessary memory access. For nearest level sampling, the quality improvement is basically free, as the frequency filter is applied during mipmap generation. For bilinear level sampling, the quality improvement is not free, but it is still a good tradeoff.
+Level sampling(nearest/bilinear) is the best of both worlds: it provides a decent quality improvement over bilinear pixel sampling and is less performance intensive than supersampling. It takes extra space to store the mipmap but saves unnecessary memory access. For nearest-level sampling, the quality improvement comes with little cost, as the frequency filter is applied during mipmap generation. For bilinear-level sampling, quality improvement is still a good trade-off.
 
 The visual difference is best illustrated by the following images, generated with different combinations of pixel and level sampling methods.
 
