@@ -265,7 +265,7 @@ By sampling the texture at the UV coordinate of each pixel using various samplin
 
 **Nearest neighbor** and **Bilinear interpolation** are two prevalent sampling methods. 
 
-While nearest neighbor directly samples the point on texture closest to the given UV coordinate, bilinear interpolation can be seen as the anti-aliasing technique for pixel sampling: It samples the four points closest to the given UV coordinate and then blends the colors of the four points together; the closer the point is to the UC coordinate, the more color from the point gets blended in. The result is a smoother texture at the cost of four times more texture accesses and arithmetic operations.
+While nearest neighbor directly samples the point on texture closest to the given UV coordinate, bilinear interpolation can be seen as the anti-aliasing technique for pixel sampling: It samples the four points closest to the given UV coordinate and then blends the colors of the four points together; the closer the point is to the UV coordinate, the more color from the point gets blended in. The result is a smoother texture at the cost of four times more texture accesses and arithmetic operations.
 
 ### Implementation
 
@@ -404,7 +404,7 @@ Color Texture::sample(const SampleParams& sp) {
 ```
 
 #### Getting mipmap level
-Regardless of the specific texture sampling method we use, first, we need to approximate the nearest mipmap level to the pixel by calculating the texture footprint. To do so, we calculate the UV of points next to the point to be sampled and approximate the delta UV.   
+Regardless of the specific texture sampling method we use, first, we need to approximate the nearest mipmap level to the pixel by calculating the texture footprint. To do so, we calculate the UV of points next to the point to be sampled and approximate the derivative of UV at the point. 
 
 This is done at the rasterizer part of the pipeline, where we have access to the triangle's UV coordinates:
 

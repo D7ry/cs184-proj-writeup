@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>writeup.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<p>src: https://github.com/D7ry/cs184-proj-writeup/blob/master/proj1/writeup.md</p>
+<h1 align="center">CS 184: Computer Graphics and Imaging, Spring 2023</h1>
+<h1 align="center">Project 1: Rasterizer</h1>
+<h1 id="overview">Overview</h1>
+<p>In this project, our group built a functional rasterizer that supports 2D textured geometries. The rasterizer also supports features such as super-sampling and 2D transformations.</p>
+<p>In addition, the user could choose from 3 different mipmap texture sampling methods, as well as 2 different pixel sampling methods.</p>
+<p>This project has greatly enhanced our understanding of 2D graphics, as well as our interest in delving further deep into the field of computer graphics. It has also prepared us for future C++ projects by honing our skills with tools like cmake and Visual Studio.</p>
+<h1 id="section-i-rasterization">Section I: Rasterization</h1>
+<h2 id="part-1-rasterizing-single-color-triangles">Part 1: Rasterizing single-color triangles</h2>
+<p>I created my own <code>Triangle_2D</code> class and a bunch of structs to keep things organized and well cached to be used later; The following only shows the functions and variables needed for part 1.</p>
+<pre class="hljs"><code><div>Class Triangle_2D
+{
+	Vector2D p0, p1, p2;  <span class="hljs-comment">//points constructing this triangle</span>
+	Edge e0, e1, e2; <span class="hljs-comment">// Edge struct of the triangle, containg ptrs to the vectors that construct them</span>
+	<span class="hljs-keyword">float</span> minX, minY, maxX, maxY; <span class="hljs-comment">//bounding box</span>
+
+	<span class="hljs-comment">// for implementation 1</span>
+	<span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">isInside</span><span class="hljs-params">(<span class="hljs-keyword">float</span> a_x, <span class="hljs-keyword">float</span> a_y)</span></span>;
+	<span class="hljs-comment">// for implementation 2</span>
+	<span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">getHorizontalRayHit</span><span class="hljs-params">(<span class="hljs-keyword">float</span> a_y, <span class="hljs-keyword">float</span>&amp; a_xBegin, <span class="hljs-keyword">float</span>&amp; a_xEnd)</span></span>;
+	<span class="hljs-function"><span class="hljs-keyword">bool</span> <span class="hljs-title">getVerticalRayHit</span><span class="hljs-params">(<span class="hljs-keyword">float</span> a_x, <span class="hljs-keyword">float</span>&amp; a_yBegin, <span class="hljs-keyword">float</span>&amp; a_yEnd)</span></span>;
+};
+</div></code></pre>
+<p><code>Triangle_2D</code> takes in 6 coordinates to construct.
+I've also defined a sub-struct Edge, which simply contains 2 vectors, and a line normal of the edge, calculated at initialization and will be used for Rasterization.</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">enum</span> GeometricRelation
+{
+	IN,
+	OUT,
+	ON
+};
+<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Edge</span>
+{</span>
+	<span class="hljs-keyword">float</span> a, b; <span class="hljs-comment">//slope and constant, if the edge were to be repesented in a 2d coordinate.</span>
+	<span class="hljs-keyword">float</span> xMin, yMin, xMax, yMax;
+	Vector2D* src; Vector2D* dst; <span class="hljs-comment">// ptr to the vectors constructed this edge; vectors are stored in Triangle_2D</span>
+	Vector2D lineNormal; <span class="hljs-comment">// line normal vector</span>
+	Vector2D v; <span class="hljs-comment">//relative vec from src to dst</span>
+	<span class="hljs-function"><span class="hljs-keyword">inline</span> GeometricRelation <span class="hljs-title">getGeometricRelation</span><span class="hljs-params">(<span class="hljs-keyword">float</span> a_x, <span class="hljs-keyword">float</span> a_y)</span></span>;
+	Edge(Vector2D* a_src, Vector2D* a_dst);;
+};
+</div></code></pre>
+<p>With the above abstraction, later tasks are much more modular and easier to implement.</p>
+<h3 id="implementation-1-sampling-everything-in-the-bounding-box">Implementation 1: Sampling everything in the bounding box</h3>
+<p>Implementation 1 is simple; it involves the following steps:</p>
+<ol>
+<li>Calculate the bounding box of the triangle; cached in <code>float minX, minY, maxX, maxY;</code> of the <code>Triangle_2D</code> class.</li>
+<li>For each pixel in the bounding box, perform a 3-plane test, done as follows:
+<ul>
+<li>Triangle's <code>Edge</code> structs has the function <code>getGeometricRelation(</code>float a_x, float a_y)` which outputs whether the absolute coordinate(A_X, A_Y) is inside/outside/on the halfplane constructed by the edge.</li>
+<li>The triangle will invoke each of the 3 edge's <code>getGeometricRelation()</code>, which checks the sign of the dot product of the edge's line normal and the point vector; if all geometric relations indicate that the point is inside the half-plane, the point is inside.</li>
+</ul>
+</li>
+<li>If the pixel is inside the triangle, color it onto the sampling buffer.</li>
+</ol>
+<p>Implementation 1 is <strong>no worse than</strong> sampling every triangle in the triangle bounding box because it does exactly that.</p>
+<p>Here's an image rendered using implementation 1:</p>
+<div align="center"><img src = "images/P1_Result.png" width="60%"/></div>
+<h3 id="implementation-2-2d-raycasting">Implementation 2: 2D Raycasting</h3>
+<p>Implementation 2 differs from implementation 1 in that it only samples 2 precise points for each sample unit, then fills in the pixels without sampling.<br>
+The detailed algorithm goes as follows:</p>
+<ol>
+<li>Compare the triangle's bounding box's width and height, if width &gt; height, proceed to do vertical ray casts, else, proceed to do horizontal raycasts.</li>
+<li>Start from one side of the bounding box, and keep doing raycasts vertically/horizontally until reaching the other side of the box; this is implemented through <code>Triangle_2D::getVerticalRayHit</code>and <code>Triangle_2D::getHorizontalRayHit</code>, which looks for the intersection between pairs of linear functions.</li>
+</ol>
+<p>Here is a graphical illustration of the algorithm:</p>
+<div align="center">
+<img src="images/P1_RayCasting.png" width="60%" text-align = "center"></img>
+<figcaption align = "center">the left image has a smaller width than height, which is why the rays are cast vertically.</figcaption>
+</div>
+<p>Theoretically, this implementation has O(n) speed with n being the min(width, height) of the triangle's bounding box, compared to the O(n2</sup>) complexity of implementation 1. The performance improvement is most noticeable under bigger resolutions.</p>
+<p>Here is a timing comparison(in ticks) between the 2 implementations, both rendering test3, the dragon svg file, under 2560*1440 resolution.<br>
+The numbers below are the differences in <code>std::clock()</code> before and after <code>DrawRend::redraw()</code> invokes <code>SVG::draw()</code>.</p>
+<div align="center">
+  <table>
+    <tr>
+      <td></td>
+      <td>Native(2K)</td>
+      <td>9x SS(8K)</td>
+      <td>16x SS(32K)</td>
+    </tr>
+    <tr>
+      <td>Sample Everything</td>
+      <td align = "center">32</td>
+      <td align = "center">182</td>
+      <td align = "center">309</td>
+    </tr>
+    <tr>
+      <td>2D Raycast</td>
+      <td align = "center">12</td>
+      <td align = "center">31</td>
+      <td align = "center">48</td>
+    </tr>
+  </table>
+</div>
+<p>further optimizations such as divide-and-conquer can still be made to lower the complexity to O(log<sub>2</sub>n); we plan to implement them in the future.</p>
+<h2 id="part-2-antialiasing-triangles">Part 2: Antialiasing triangles</h2>
+<p>Rasterization by sampling inevitably causes jaggies and artifacts around high-frequency samples. <strong>Super-sampling(SS)</strong> is the most naive yet effective way to reduce them: SS simply samples a scaled-up version of the original geometry and scales the sample back down, combining multiple sampled pixels into one, resulting in a much smoother image.</p>
+<h3 id="implementation">Implementation</h3>
+<p>Without super-sampling, the rasterizer's <code>sample_buffer</code> is as large as the frame buffer, and drawing onto the frame buffer is a 1-1 mapping process. The rasterization pipeline before SS works as follows:</p>
+<ol>
+<li>Sample pixels from the triangle using either implementation described in Part 1.</li>
+<li>Draw the sample buffer onto the frame buffer 1-on-1 at <code>RasterizerImp::resolve_to_framebuffer()</code>.</li>
+</ol>
+<p>To achieve SS, first, we scale the width and height of the <code>sample_buffer</code> by the square root of <code>sample_rate</code>,
+which made the sample buffer able to contain sample_rate times framebuffer worth of pixels. Algorithmically, this is done by calling <code>samlpe_buffer.resize(width * height * sample_rate)</code>, as <code>samlpe_buffer</code> is stored as a 1D vector.</p>
+<p>The pipeline now looks like this, with green highlighted being the added steps:</p>
+<ol>
+<li><span style="color:green;">Scale up the size of sample_buffer by sample_rate.</span></li>
+<li><span style="color:green;">Before initializing <code>Triangle_2D</code>, scale up the coordinates of the triangle, each by sqrt(sample_rate)</span></li>
+<li>Sample pixels from the triangle using either implementation described in Part 1.</li>
+<li><span style="color:grey;"><s>Draw the sample buffer onto the frame buffer 1-on-1.</s></span></li>
+<li><span style="color:green;">For each pixel to be drawn to the frame buffer, look for the corresponding <code>sample_rate</code> times as many pixels from the sample buffer, and draw the average of the sample pixels' colors onto the frame buffer.</li>
+</ol>
+<p>The following is the helper function called in <code>resolve_to_framebuffer()</code>, in place of the direct <code>Color col = sample_buffer[y * width + x];</code> to draw the average of the sample pixels' colors onto the frame buffer:</p>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">constexpr</span> <span class="hljs-keyword">float</span> <span class="hljs-title">sample_rate_inv</span><span class="hljs-params">(<span class="hljs-keyword">float</span> sample_rate)</span> </span>{
+	<span class="hljs-keyword">return</span> <span class="hljs-number">1.f</span> / sample_rate;
+}
+<span class="hljs-comment">// Get a color at framebuffer's (X, Y) coordinate, from the sample buffer.</span>
+<span class="hljs-function">Color <span class="hljs-title">RasterizerImp::get_color</span><span class="hljs-params">(<span class="hljs-keyword">size_t</span> x, <span class="hljs-keyword">size_t</span> y)</span> </span>{
+	<span class="hljs-keyword">if</span> (x &gt;= width || y &gt;= height || x &lt; <span class="hljs-number">0</span> || y &lt; <span class="hljs-number">0</span>) {
+		<span class="hljs-keyword">return</span> Color::White;
+	}
+	Color c;
+	<span class="hljs-keyword">size_t</span> buffer_x = x * sample_stride; <span class="hljs-comment">// sample_stride = sqrt(sample_rate)</span>
+	<span class="hljs-keyword">size_t</span> buffer_y = y * sample_stride;
+	<span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> j = buffer_y; j &lt; buffer_y + sample_stride; j++) {
+	<span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = buffer_x; i &lt; buffer_x + sample_stride; i++) {
+		c += sample_buffer[j * sample_width + i];
+		}
+	}
+	<span class="hljs-comment">// Average the color.</span>
+	c *= sample_rate_inv(sample_rate);
+	<span class="hljs-keyword">return</span> c;
+}
+</div></code></pre>
+<p>The following are images rendered without SS and with incrementing levels of SS, from 4x to 16x:</p>
+<div align="center">
+<table style="max-width: 100%; margin: 50px auto;">
+    <tr>
+      <td>
+        <img src="images/P2_01.png"  width="400px"/>
+        <figcaption align="center">No SS</figcaption>
+      </td>
+      <td>
+        <img src="images/P2_04.png" width="400px"/>
+        <figcaption align="center">4X SS</figcaption>
+      </td>
+      <td>
+        <img src="images/P2_16.png"  width="400px"/>
+        <figcaption align="center">16X SS</figcaption>
+    </tr>
+    <br>
+  </table>
+</div>
+<p>The result of the supersized-averaged-downsized image has much smoother edges. This is because pixels on the frame buffer now convey a much more accurate representation of the original geometry, taking into account the average of details missed in none-SS rasterizations, such as the sharp triangular edge that no-ss rasterization lacked the precision to sample.</p>
+<h3 id="part-3-transforms">Part 3: Transforms</h3>
+<p>Transforms allow creators to easily manipulate geometries, creating different combinations. Here is a transformed cube man:</p>
+<div align = "center"><img src="images/P3_NoSkipLegDay.png" width="50%"></img>
+  <figcaption>The cube man is waving his hand saying hello, which is done by rotating and translating both arms in opposite directions.<br> The cubeman's legs are also scaled up because he never skips leg day.</figcaption>
+</div>
+<h1 id="section-ii-sampling">Section II: Sampling</h1>
+<p>For the following parts, texture sampling functions are implemented as lambdas, whose pointers are passed to:</p>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">RasterizerImp::rasterize_triangle_native</span><span class="hljs-params">(
+      <span class="hljs-keyword">float</span> x0, <span class="hljs-keyword">float</span> y0, 
+      <span class="hljs-keyword">float</span> x1, <span class="hljs-keyword">float</span> y1, 
+      <span class="hljs-keyword">float</span> x2, <span class="hljs-keyword">float</span> y2, 
+      <span class="hljs-comment">//Function pointer to return the color at samplebuffer coordinates X and Y</span>
+      <span class="hljs-built_in">std</span>::function&lt;Color(<span class="hljs-keyword">double</span>, <span class="hljs-keyword">double</span>, Triangle_2D*)&gt; getColor, 
+      <span class="hljs-comment">//UV coordinates, may be unused</span>
+      <span class="hljs-keyword">float</span> u0, <span class="hljs-keyword">float</span> v0,
+      <span class="hljs-keyword">float</span> u1, <span class="hljs-keyword">float</span> v1,
+      <span class="hljs-keyword">float</span> u2, <span class="hljs-keyword">float</span> v2)</span> 
+</span></div></code></pre>
+<p>To avoid repetitive code.</p>
+<h2 id="part-4-barycentric-coordinates">Part 4: Barycentric coordinates</h2>
+<p>Simply put, the barycentric coordinates of a triangle are a 3-dimensional coordinate system to express the relative position of a point, usually within the triangle.<br>
+The three coordinates are alpha, beta, and gamma, the sum of which is always 1; in addition, the sum of barycentric coordinates multiplied by the corresponding vertex's coordinates is always the point's absolute position.</p>
+<p>Here is an optimized algorithm to calculate the barycentric coordinates of a point within a triangle:</p>
+<pre class="hljs"><code><div>Triangle_2D::getBarycentricCoords(<span class="hljs-keyword">float</span> a_x, <span class="hljs-keyword">float</span> a_y, <span class="hljs-keyword">float</span>&amp; r_alpha, <span class="hljs-keyword">float</span>&amp; r_beta, <span class="hljs-keyword">float</span>&amp; r_gamma)
+{
+	Vector2D v = Vector2D(a_x, a_y);
+	Vector2D v2 = v - p0;
+	<span class="hljs-keyword">float</span> d20 = dot(v2, v0);
+	<span class="hljs-keyword">float</span> d21 = dot(v2, v1);
+	r_beta = clamp((d11 * d20 - d01 * d21) / denom, <span class="hljs-number">0.0f</span>, <span class="hljs-number">1.0f</span>);
+	r_gamma = clamp((d00 * d21 - d01 * d20) / denom, <span class="hljs-number">0.0f</span>, <span class="hljs-number">1.0f</span>);
+	r_alpha = clamp(<span class="hljs-number">1.0f</span> - r_beta - r_gamma, <span class="hljs-number">0.0f</span>, <span class="hljs-number">1.0f</span>);
+}
+</div></code></pre>
+<p>Various variables depending only on the triangle are being cached as member variables of <code>Triangle_2D</code></p>
+<pre class="hljs"><code><div><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Triangle_2D</span>
+{</span>
+	...
+	Vector2D v0, v1;
+	<span class="hljs-keyword">float</span> d00, d01, d11;
+	<span class="hljs-keyword">float</span> denom;
+	...
+}
+Triangle_2D::Triangle_2D(...) {
+	<span class="hljs-comment">// cache variables</span>
+	v0 = p1 - p0, v1 = p2 - p0,
+	d00 = dot(v0, v0);
+	d01 = dot(v0, v1);
+	d11 = dot(v1, v1);
+	denom = d00 * d11 - d01 * d01;
+}
+</div></code></pre>
+<p>Barycentric coordinates are especially useful in texture &amp; color blending. For example, in the following triangle, each vertex has its distinct color of either R, G, or B. Every pixel is colored based on its corresponding coordinates: the closer the pixel is to one vertex(the bigger the corresponding coordinate is), the more of the color of that edge is blended into the pixel. The result is a triangle of smoothly blended color:</p>
+<div align="center">
+  <image src="images/P4_Triangle.png" width="50%"></image>
+</div>
+<p>A closer look at the coloring algorithm looks as follows:</p>
+<pre class="hljs"><code><div>Color c1, c2, c3; <span class="hljs-comment">// colors of the vertices</span>
+<span class="hljs-keyword">auto</span> getInterpolatedColor = [c0, c1, c2](<span class="hljs-keyword">int</span> x, <span class="hljs-keyword">int</span> y, Triangle_2D* t) -&gt; Color {
+	<span class="hljs-keyword">float</span> alpha, beta, gamma;
+	t-&gt;getBarycentricCoords(x + <span class="hljs-number">0.5</span>, y + <span class="hljs-number">0.5</span>, alpha, beta, gamma);
+	<span class="hljs-keyword">return</span> alpha * c0 + beta * c1 + gamma * c2;
+};
+</div></code></pre>
+<h2 id="part-5-%22pixel-sampling%22-for-texture-mapping">Part 5: &quot;Pixel sampling&quot; for texture mapping</h2>
+<p>2D models are simply polygons. One could fill in colors to the polygon, but the polygon still appears to be but a geometry. Think of a polygon as a &quot;canvas&quot;; the artist needs to print as much detail as possible onto the canvas to make it look like a real object. Instead of painting onto the &quot;canvas&quot; pixel by pixel, we first create a new reference painting,
+<strong>texture</strong>, and then print the texture onto the model.</p>
+<p>Separating the model from the texture allows the model to be easily scalable and modifiable, using algorithms to adapt models of different sizing to the same texture; the process of adapting the texture to the model is called <strong>texture mapping</strong>.</p>
+<p>Adapting texture to model is analogous to adapting geometry to screen space, the latter is done through <strong>rasterization</strong> by sampling, and the former has a more direct name: <strong>pixel sampling</strong>.</p>
+<p>The idea behind <strong>pixel sampling</strong> is simple: every pixel of a geometry has a 2D relative coordinate called <strong>UV coordinate</strong>, which maps to a specific coordinate on the texture.
+By sampling the texture at the UV coordinate of each pixel using various sampling methods(more on this in Part 6), we can obtain a color for each pixel, and then fill in the pixel with that color.</p>
+<p><strong>Nearest neighbor</strong> and <strong>Bilinear interpolation</strong> are two prevalent sampling methods.</p>
+<p>While nearest neighbor directly samples the point on texture closest to the given UV coordinate, bilinear interpolation can be seen as the anti-aliasing technique for pixel sampling: It samples the four points closest to the given UV coordinate and then blends the colors of the four points together; the closer the point is to the UV coordinate, the more color from the point gets blended in. The result is a smoother texture at the cost of four times more texture accesses and arithmetic operations.</p>
+<h3 id="implementation">Implementation</h3>
+<h4 id="getting-uv-coordinates">Getting UV coordinates</h4>
+<p>As discussed above, to obtain UV coordinates, first we obtain the barycentric coordinates of the pixel using the member function <code>Triangle_2D::getBarycentricCoords(float a_x, float a_y, float&amp; r_alpha, float&amp; r_beta, float&amp; r_gamma)</code></p>
+<p>To convert the barycentric coords into UV coords, we perform a blending algorithm similar to color blending discussed in part 4, where we multiply the UV coordinates of each vertex by the corresponding barycentric coordinate, and then sum them up:</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">void</span> RasterizerImp::Triangle_2D::getUV(<span class="hljs-keyword">float</span> a_x, <span class="hljs-keyword">float</span> a_y, Vector2D&amp; r_uv)
+{
+	<span class="hljs-keyword">float</span> alpha, beta, gamma;
+	<span class="hljs-keyword">this</span>-&gt;getBarycentricCoords(a_x, a_y, alpha, beta, gamma);
+	r_uv = alpha * uv0 + beta * uv1 + gamma * uv2;
+};
+</div></code></pre>
+<p>Once we have the UV coordinates, proceed to the next stage of the pipeline by calling <code>Texture::sample()</code> with the UV coordinates as a part of the argument.</p>
+<p><code>Texture::sample()</code> then invokes different sampling methods: nearest neighbor and bilinear interpolation, depending on the setting. Note that regardless of the pixel sampling method, we will always be sampling once from the highest resolution texture(mipmap level 0); More sophisticated level sample methods will be discussed in Part 6.</p>
+<h4 id="impl-nearest-neighbor">Impl: Nearest Neighbor</h4>
+<p>For nearest neighbor, we simply round the UV coordinates to the nearest integer, and then sample the texture at the corresponding mipmap coordinate by scaling the UV coordinates by the mipmap level's width and height.</p>
+<pre class="hljs"><code><div><span class="hljs-function">Color <span class="hljs-title">Texture::sample_nearest</span><span class="hljs-params">(Vector2D uv, <span class="hljs-keyword">int</span> level)</span> </span>{
+	<span class="hljs-keyword">auto</span>&amp; mip = mipmap[level];
+	<span class="hljs-keyword">return</span> mip.get_texel(round(uv.x * mip.width), round(uv.y * mip.height));
+}
+</div></code></pre>
+<h4 id="impl-bilinear-interpolation">Impl: Bilinear Interpolation</h4>
+<p>As discussed above, bilinear interpolation samples the four points closest to the UV coordinate and then blends the colors of the four points through lerping.</p>
+<pre class="hljs"><code><div><span class="hljs-function">Color <span class="hljs-title">Texture::sample_bilinear</span><span class="hljs-params">(Vector2D uv, <span class="hljs-keyword">int</span> level)</span> </span>{
+	<span class="hljs-keyword">auto</span>&amp; mip = mipmap[level];
+	<span class="hljs-keyword">float</span> x = uv.x * mip.width;
+	<span class="hljs-keyword">float</span> y = uv.y * mip.height;
+	<span class="hljs-keyword">float</span> x0 = <span class="hljs-built_in">floor</span>(x), x1 = <span class="hljs-built_in">ceil</span>(x), y0 = <span class="hljs-built_in">floor</span>(y), y1 = <span class="hljs-built_in">ceil</span>(y);
+	Color c00 = mip.get_texel(x0, y0);
+	Color c01 = mip.get_texel(x0, y1);
+	Color c10 = mip.get_texel(x1, y0);
+	Color c11 = mip.get_texel(x1, y1);
+
+	Color c0 = lerp(c00, c01, y - y0);
+	Color c1 = lerp(c10, c11, y - y0);
+	<span class="hljs-keyword">return</span> lerp(c0, c1, x - x0);
+}
+</div></code></pre>
+<h3 id="results-and-comparison">Results and Comparison</h3>
+<p>The following are four screenshots generated using nearest sampling and bilinear sampling at different SS levels, which illustrate their differences:</p>
+<div align="center">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/P5_Nearest_0SS.png" align="center" width="400px"/>
+        <figcaption align="center">Nearest, no SS</figcaption>
+      </td>
+      <td>
+        <img src="images/P5_Bilinear_0SS.png" align="center" width="400px"/>
+        <figcaption align="center">Bilinear, no SS</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images/P5_Nearest_16SS.png" align="center" width="400px"/>
+        <figcaption align="center">Nearest, 16x SS</figcaption>
+      </td>
+      <td>
+        <img src="images/P5_Bilinear_16SS.png" align="center" width="400px"/>
+        <figcaption align="center">Bilinear, 16x SS</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+<p>As shown through the pixel inspector, regardless of the SS rate, bilinear interpolation delivers a much smoother longitudinal&amp;latitudial line.</p>
+<p>Under the native resolution, the lines are intermittent points under nearest neighbor sampling, but the bilinear interpolation method successfully renders the contour of the lines.</p>
+<p>Bilinear interpolation still wins under a higher sampling rate; the lines it renders are less jagged than the counterpart.</p>
+<p>Looking at the overall picture, bilinear interpolation renders a much smoother image.<br>
+Their differences are most noticeable at places where texture color changes abruptly: e.g. near a thin line like the longitudinal&amp;latitudinal line.</p>
+<p>The rationale behind is similar to the anti-aliasing technique: the lower the frequency achieved using blending, the smoother the jags-usually occurring at high-frequency areas-are rendered.</p>
+<h2 id="part-6-%22level-sampling%22-with-mipmaps-for-texture-mapping">Part 6: &quot;Level sampling&quot; with mipmaps for texture mapping</h2>
+<p>As discussed in part 5, texture sampling can have artifacts at high-frequency areas for which the model has less than enough pixels to sample. We've discussed 2 ways to minimize the artifacts: super-sampling and interpolated pixel sampling. &quot;Level sampling&quot; is a third way to do so, which comes with its own set of advantages and drawbacks.</p>
+<p>The idea behind level sampling is simple: instead of sampling from the highest resolution texture all the time(as in part 5), we sample from a down-sampled version of the texture (A.K.A. mipmap) depending on the distance between the pixel and the camera. This gives 3 main benefits:</p>
+<ol>
+<li>Performance. Sampling from a lower-resolution texture is much faster than sampling from a higher-resolution texture.</li>
+<li>Visual quality. Sampling from a lower resolution texture can reduce the artifacts caused by high-frequency areas, which have been pre-processed during the compression where high-frequency areas are filtered and blended.</li>
+<li>Memory. Lower-resolution textures simply take up less memory, however, storing mipmap costs an additional 1/3 of the original texture's space.</li>
+</ol>
+<h3 id="implementation">Implementation</h3>
+<p>To accommodate for 6 different combinations of level sampling, <code>Texture::sample()</code> has been restructured:</p>
+<pre class="hljs"><code><div><span class="hljs-function">Color <span class="hljs-title">Texture::sample</span><span class="hljs-params">(<span class="hljs-keyword">const</span> SampleParams&amp; sp)</span> </span>{
+  <span class="hljs-keyword">switch</span> (sp.lsm) {
+  <span class="hljs-keyword">case</span> LevelSampleMethod::L_ZERO: <span class="hljs-comment">//level defaults to 0</span>
+      {
+          <span class="hljs-keyword">switch</span> (sp.psm) {
+          <span class="hljs-keyword">case</span> PixelSampleMethod::P_LINEAR:...
+          <span class="hljs-keyword">case</span> PixelSampleMethod::P_NEAREST:...
+          }
+      }
+      <span class="hljs-keyword">break</span>;
+  <span class="hljs-keyword">case</span> LevelSampleMethod::L_NEAREST:
+      {
+          <span class="hljs-keyword">switch</span> (sp.psm) {
+          <span class="hljs-keyword">case</span> PixelSampleMethod::P_LINEAR:...
+          <span class="hljs-keyword">case</span> PixelSampleMethod::P_NEAREST:...
+          }
+      }
+      <span class="hljs-keyword">break</span>;
+  <span class="hljs-keyword">case</span> LevelSampleMethod::L_LINEAR: <span class="hljs-comment">// most mind-boggling one</span>
+      {
+          <span class="hljs-keyword">switch</span> (sp.psm) {
+          <span class="hljs-keyword">case</span> PixelSampleMethod::P_LINEAR:...
+          <span class="hljs-keyword">case</span> PixelSampleMethod::P_NEAREST:...
+          }
+      }
+      <span class="hljs-keyword">break</span>;
+  }
+  <span class="hljs-comment">// return magenta for invalid level</span>
+  <span class="hljs-keyword">return</span> Color(<span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>);
+}
+</div></code></pre>
+<h4 id="getting-mipmap-level">Getting mipmap level</h4>
+<p>Regardless of the specific texture sampling method we use, first, we need to approximate the nearest mipmap level to the pixel by calculating the texture footprint. To do so, we calculate the UV of points next to the point to be sampled and approximate the delta UV.</p>
+<p>This is done at the rasterizer part of the pipeline, where we have access to the triangle's UV coordinates:</p>
+<pre class="hljs"><code><div>SampleParams sp;
+<span class="hljs-keyword">auto</span> getTexture = [tex, sp](<span class="hljs-keyword">double</span> x, <span class="hljs-keyword">double</span> y, Triangle_2D* t) <span class="hljs-keyword">mutable</span> -&gt; Color {
+  t-&gt;getUV(x, y, sp.p_uv);
+  <span class="hljs-comment">// ready x_dUV and y_dUV for mipmap level calculation.</span>
+  <span class="hljs-keyword">if</span> (sp.lsm != LevelSampleMethod::L_ZERO) { 
+  <span class="hljs-comment">// look for nearest uv that's not out of bound</span>
+    <span class="hljs-keyword">int</span> dx = t-&gt;isInside(x + <span class="hljs-number">1</span>, y) ? <span class="hljs-number">1</span> : <span class="hljs-number">-1</span>;
+    <span class="hljs-keyword">int</span> dy = t-&gt;isInside(x, y + <span class="hljs-number">1</span>) ? <span class="hljs-number">1</span> : <span class="hljs-number">-1</span>;
+    t-&gt;getUV(x + dx, y, sp.p_dx_uv); <span class="hljs-comment">// uv of nearest x coordinate</span>
+    t-&gt;getUV(x, y + dy, sp.p_dy_uv); <span class="hljs-comment">// uv of nearest y coordinate</span>
+    sp.p_dx_uv -= sp.p_uv;
+    sp.p_dy_uv -= sp.p_uv;
+  }
+  <span class="hljs-keyword">return</span> tex.sample(sp);
+};
+</div></code></pre>
+<p>In the texture sampler part of the pipeline, we take the texture footprint and, using the scaled UV, calculate the mipmap level with the normalized UV:</p>
+<pre class="hljs"><code><div><span class="hljs-function"><span class="hljs-keyword">float</span> <span class="hljs-title">Texture::get_level</span><span class="hljs-params">(<span class="hljs-keyword">const</span> SampleParams&amp; sp)</span> </span>{
+  <span class="hljs-keyword">bool</span> linear = <span class="hljs-literal">false</span>; <span class="hljs-comment">// do not round the level if linear.</span>
+  <span class="hljs-keyword">switch</span> (sp.lsm) {
+    <span class="hljs-keyword">case</span> LevelSampleMethod::L_ZERO: <span class="hljs-comment">// always return 0</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>; <span class="hljs-keyword">break</span>; 
+    <span class="hljs-keyword">case</span> LevelSampleMethod::L_NEAREST:
+    linear = <span class="hljs-literal">false</span>; <span class="hljs-keyword">break</span>;
+    <span class="hljs-keyword">case</span> LevelSampleMethod::L_LINEAR:
+    linear = <span class="hljs-literal">true</span>; <span class="hljs-keyword">break</span>;
+  }
+  Vector2D dxUV_Scaled = sp.p_dx_uv * width, dyUV_Scaled = sp.p_dy_uv * height;
+  <span class="hljs-keyword">double</span> L = max(dxUV_Scaled.norm(), dyUV_Scaled.norm()); <span class="hljs-comment">// norm = sqrt(x**2 + y**2)</span>
+  <span class="hljs-keyword">float</span> d = clamp(<span class="hljs-keyword">static_cast</span>&lt;<span class="hljs-keyword">float</span>&gt;(log2(L)), <span class="hljs-number">0.f</span>, <span class="hljs-keyword">static_cast</span>&lt;<span class="hljs-keyword">float</span>&gt;(mipmap.size() - <span class="hljs-number">1</span>));
+  <span class="hljs-keyword">if</span> (linear) { <span class="hljs-keyword">return</span> d;}
+  <span class="hljs-keyword">else</span> { <span class="hljs-keyword">return</span> round(d);}
+}
+</div></code></pre>
+<p>The level of the returned function is not rounded for bilinear level sampling, which will be discussed later.</p>
+<h4 id="nearest-level">Nearest Level</h4>
+<p>Nearest-level sampling is implemented the same as 0th-level sampling. The texture sampler takes the output of <code>get_level()</code> and samples from the mipmap of the corresponding level. <code>get_texel()</code> provides a nice abstraction so we don't need to worry about mipmap's width and height.</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">case</span> LevelSampleMethod::L_NEAREST:
+{
+    <span class="hljs-keyword">switch</span> (sp.psm) {
+    <span class="hljs-keyword">case</span> PixelSampleMethod::P_LINEAR:
+        <span class="hljs-keyword">return</span> sample_bilinear(sp.p_uv, <span class="hljs-keyword">int</span>(get_level(sp))); <span class="hljs-keyword">break</span>;
+    <span class="hljs-keyword">case</span> PixelSampleMethod::P_NEAREST:
+        <span class="hljs-keyword">return</span> sample_nearest(sp.p_uv, <span class="hljs-keyword">int</span>(get_level(sp))); <span class="hljs-keyword">break</span>;
+    }
+}
+<span class="hljs-keyword">break</span>;
+</div></code></pre>
+<h4 id="bilinear-interpolated-level">Bilinear Interpolated Level</h4>
+<p>Bilinear interpolated level sampling works analogously to that pixel sampling. Instead of sampling from a single texel, we sample from 2 adjacent texels in the mipmap level, and interpolate the result using <code>lerp()</code>:</p>
+<pre class="hljs"><code><div><span class="hljs-keyword">case</span> LevelSampleMethod::L_LINEAR: <span class="hljs-comment">// most mind-boggling one</span>
+{
+    <span class="hljs-keyword">float</span> level = get_level(sp);
+    <span class="hljs-keyword">int</span> l0 = <span class="hljs-built_in">floor</span>(level), l1 = <span class="hljs-built_in">ceil</span>(level); <span class="hljs-comment">// 2 adjacent levels</span>
+    Color c0, c1;
+    <span class="hljs-keyword">switch</span> (sp.psm) {
+    <span class="hljs-keyword">case</span> PixelSampleMethod::P_LINEAR:
+        c0 = sample_bilinear(sp.p_uv, l0);
+        c1 = sample_bilinear(sp.p_uv, l1);
+        <span class="hljs-keyword">break</span>;
+    <span class="hljs-keyword">case</span> PixelSampleMethod::P_NEAREST:
+        c0 = sample_nearest(sp.p_uv, l0);
+        c1 = sample_nearest(sp.p_uv, l1);
+        <span class="hljs-keyword">break</span>;
+    }
+<span class="hljs-keyword">return</span> lerp(c0, c1, level - l0);
+}
+</div></code></pre>
+<p>Bilinear level sampling can be further combined with bilinear texture sampling, leading the trilinear sampling with the best quality at the cost of performance.</p>
+<p>To compare and contrast pixel sampling, level sampling, and supersampling:</p>
+<p>Supersampling achieves the best quality by compressing multiple pixels into one at the most performance cost.</p>
+<p>Bilinear pixel sampling is less performance intensive by sampling from 4 adjacent texels; it provides some quality improvement over nearest pixel sampling.</p>
+<p>Level sampling(nearest/bilinear) is the best of both worlds: it provides a decent quality improvement over bilinear pixel sampling and is less performance intensive than supersampling. It takes extra space to store the mipmap but saves unnecessary memory access. For nearest-level sampling, the quality improvement comes with little cost, as the frequency filter is applied during mipmap generation. For bilinear-level sampling, quality improvement is still a good trade-off.</p>
+<p>The visual difference is best illustrated by the following images, generated with different combinations of pixel and level sampling methods.</p>
+<div align="center">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/P6_L_Zero_P_Nearest.png" align="center" width="400px"/>
+        <figcaption align="center">L_ZERO, P_NEAREST</figcaption>
+      </td>
+      <td>
+        <img src="images/P6_L_Zero_P_Linear.png" align="center" width="400px"/>
+        <figcaption align="center">L_ZERO, P_LINEAR</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images/P6_L_Nearest_P_Nearest.png" align="center" width="400px"/>
+        <figcaption align="center">L_NEAREST, P_NEAREST</figcaption>
+      </td>
+      <td>
+        <img src="images/P6_L_Nearest_P_Linear.png" align="center" width="400px"/>
+        <figcaption align="center">L_NEAREST, P_LINEAR</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+</body>
+</html>
