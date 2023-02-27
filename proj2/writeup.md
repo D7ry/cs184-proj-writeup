@@ -187,9 +187,168 @@ Vector3D Vertex::normal(void) const
 
 #### Briefly explain how you implemented the edge flip operation and describe any interesting implementation / debugging tricks you have used.
 
+Any arbitrary edge of a 3D geometry can be seen as a part of a half-edge complex[^1] consisting of a multitude of edges, half-edges, vertices, and faces. To flip an edge, we changed the relations between the edge and its neighboring meshes by adjusting pointers. Since no new mesh is created or destroyed, we simply repurpose some meshes in place of others. One thing to note is that boundary-edges are not flippable, to which we simply return the original boundary edge.
+
+In terms of the actual algorithm, first, we get the half-edge complex by traversing the half-edges:
+```cpp
+inline void populate_edge_complex(EdgeIter& e0,
+  EdgeIter& e1, EdgeIter& e2, EdgeIter& e3, EdgeIter& e4,
+  HalfedgeIter& h0, HalfedgeIter& h1, HalfedgeIter& h2, HalfedgeIter& h3, HalfedgeIter& h4, HalfedgeIter& h5, HalfedgeIter& h6, HalfedgeIter& h7, HalfedgeIter& h8, HalfedgeIter& h9,
+  VertexIter& v0, VertexIter& v1, VertexIter& v2, VertexIter& v3,
+  FaceIter& f0, FaceIter& f1) {
+  //Halfedges
+  h0 = e0->halfedge();
+  h1 = h0->next();
+  h2 = h1->next();
+  h3 = h0->twin();
+  h4 = h3->next();
+  h5 = h4->next();
+  h6 = h1->twin();
+  h7 = h2->twin();
+  h8 = h4->twin();
+  h9 = h5->twin();
+  //Vertices
+  v0 = h0->vertex();
+  v1 = h3->vertex();
+  v2 = h2->vertex();
+  v3 = h5->vertex();
+  //Edges
+  e1 = h1->edge();
+  e2 = h2->edge();
+  e3 = h4->edge();
+  e4 = h5->edge();
+  //Faces
+  f0 = h0->face();
+  f1 = h3->face();
+}
+```
+
+Then, we adjust the pointers; our algorithm works slightly differently from the CMU doc in that we do not "rotate" the edges along with the flipped edge to maintain consistency from face pointers to the edges; instead we rotate the edge alone and adjust the affected pointers accordingly.
+```cpp
+EdgeIter HalfedgeMesh::flipEdge(EdgeIter e0)
+{
+  if (e0->isBoundary()) { // do nothing at boundary
+    return e0;
+  }
+  // get all it related to E0
+  HalfedgeIter h0, h1, h2, h3, h4, h5, h6, h7, h8, h9;
+  VertexIter v0, v1, v2, v3;
+  EdgeIter e1, e2, e3, e4; // e0 is already assigned
+  FaceIter f0, f1;
+  populate_edge_complex(e0, e1, e2, e3, e4, h0, h1, h2, h3, h4, h5, h6, h7, h8, h9, v0, v1, v2, v3, f0, f1);
+  // reconfigure possibly affected vertices
+  {
+    v0->halfedge() = h7;
+    v1->halfedge() = h9;
+  }
+  // reset halfedge pointers
+  {
+    h3->setNeighbors(h5, h0, v2, e0, f1);
+    h0->setNeighbors(h2, h3, v3, e0, f0);
+  }
+  // reconfigure possibly affected faces
+  { // faces may point to half-edges that don't belong to them anymore.
+    f0->halfedge() = h0;
+    f1->halfedge() = h3;
+  }
+  // reconfigure affected halfedges
+  {
+    { //reset order
+      //outs
+      h2->next() = h4; // h2.next used to be h0
+      h5->next() = h1; // h5.next used to be h3
+      //ins
+      h4->next() = h0;
+      h1->next() = h3;
+    }
+    { //reset faces
+      h1->face() = f1;
+      h4->face() = f0;
+    }
+  }
+  return e0;
+}
+```
+
+Adjusting pointers is extremely error-prone; we wrote the following functions to help us check mesh relations and consistencies(they're a lot more useful than the `CHECK` functions in the starter code):
+```cpp
+  static bool is_closed(std::vector<HalfedgeIter>& a_halfedges) {
+    ASSERT(a_halfedges.size() > 1);
+    for (int i = 0; i < a_halfedges.size() - 1; i++) {
+      auto it = a_halfedges[i];
+      if (it->next() != a_halfedges[i + 1]) {
+        return false;
+      }
+    }
+    if (a_halfedges[a_halfedges.size() - 1]->next() != a_halfedges[0]) {
+      return false;
+    }
+    return true;
+  }
+#define CHECK_CLOSED(...) ASSERT(Debug::is_closed(std::vector<HalfedgeIter>{__VA_ARGS__}))
+  static bool is_face_of(FaceIter a_face, std::vector<HalfedgeIter>& a_halfedges) {
+    for (auto i : a_halfedges) { // check ptr from edge to face
+      if (i->face() != a_face) {
+        return false;
+      }
+    }
+    auto it = a_face->halfedge(); // check ptr from face to edges
+    do {
+      if (std::find(a_halfedges.begin(), a_halfedges.end(), it) == a_halfedges.end()) {
+        return false;
+      }
+      it = it->next();
+    } while (it != a_face->halfedge());
+    return true;
+  }
+#define CHECK_FACE(face, ...) ASSERT(Debug::is_face_of(face, std::vector<HalfedgeIter>{__VA_ARGS__}))
+  static bool is_vertex_of(VertexIter a_vertex, std::vector<HalfedgeIter> a_halfedges) {
+    ASSERT(a_halfedges.size() > 0)
+    for (auto i : a_halfedges) { // check ptr from edge to vertex
+      if (i->vertex() != a_vertex) {
+        return false;
+      }
+    }
+    auto it = a_vertex->halfedge();
+    do {
+      auto f = std::find(a_halfedges.begin(), a_halfedges.end(), it);
+      if (f != a_halfedges.end()) {
+        a_halfedges.erase(f); // remove found edge
+      }
+      it = it->twin()->next();
+    } while (it != a_vertex->halfedge());
+    return a_halfedges.size() == 0;
+  }
+#define CHECK_VERTEX(vertex, ...) ASSERT(Debug::is_vertex_of(vertex, std::vector<HalfedgeIter>{__VA_ARGS__}))
+```
+
 #### Show screenshots of the teapot before and after some edge flips.
 
+<div align="middle">
+  <table style="width:100%">
+    <tr align="center">
+      <td>
+        <img src="images/p4_teapot_before_flip.png" align="middle" width="400px"/>
+        <figcaption>Before flip</figcaption>
+      </td>
+      <td>
+        <img src="images/p4_teapot_after_flip.png" align="middle" width="400px"/>
+        <figcaption>After filp</figcaption>
+      </td>
+    </tr>
+    <br>
+  </table>
+</div>
+<br>
+
 #### Write about your eventful debugging journey, if you have experienced one.
+
+Things went generally pretty smooth; I had a hard time trying to figure out one face "disappearing" when all the half-edges around it are geometrically correct and point to the face. This turns out to be caused by forgetting to adjust pointers from `Face` to `HalfEdge`, despite having already adjusted pointers from `HalfEdge` to `Face`.
+
+<div align="middle">
+  <img src="images/p4_debug_journey.png" align="middle" width="50%">
+</div>
+<br>
 
 ### Part 5: Edge Split
 
@@ -215,3 +374,4 @@ Vector3D Vertex::normal(void) const
 
 
 
+[^1]: http://15462.courses.cs.cmu.edu/fall2015content/misc/HalfedgeEdgeOpImplementationGuide.pdf
