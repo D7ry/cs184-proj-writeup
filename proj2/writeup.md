@@ -69,6 +69,7 @@ The function is implemented as a template function so to be able to handle both 
   </table>
 </div>
 <br>
+
 #### Show a screenshot of a slightly different Bezier curve by moving the original control points around and modifying the parameter via mouse scrolling.
 
 <div align="middle">
@@ -86,7 +87,7 @@ The de Casteljau algorithm can be extended to bezier surfaces by the following 2
 1. Evaluate the bezier curve for each row of control points in 3d space, using parameter u; store the temporary result in the column direction
 2. Evaluate the bezier curve for each column of control points in 3d space, using parameter v, the final result should be a single point in 3d space
 
-#### Implementation
+##### Implementation
 To implement bezier surface algorithm, we iteratively call `evaluateStep()` which internally invokes `deCasteljauHack` defined above for step(1), and then aggregate the results of step(1) by iteratively calling `evaluateStep()` yet again. The code portion looks as follows:
 
 ```cpp
@@ -118,13 +119,69 @@ Vector3D BezierPatch::evaluate(double u, double v) const
 ```
 #### Show a screenshot of bez/teapot.bez (not .dae) evaluated by your implementation.
 
+<div align="middle">
+  <img src="images/p2_teapot_bez.png" align="middle" width="50%">
+</div>
+<br>
+
 ## Section II: Triangle Meshes and Half-Edge Data Structure
 
 ### Part 3: Area-Weighted Vertex Normals
 
 #### Briefly explain how you implemented the area-weighted vertex normals.
 
+##### Explanation
+
+The area-weighted vertex normal of a vertex `V` is the approximate unit normal at `V`, computed by taking the area-weighted average of the normals of neighboring triangles, then normalizing.
+
+##### Implementation
+
+To compute the area-weighted vertex normal, we first get the neighboring triangles of the vertex by iterating through its half-edges(looping until the current half-edge iterator is identical to the iterator at the beginning of the looping process), and then compute the 1. area and 2. normal of the triangle, adding the production of the area and normal to the vertex normal, which is then normalized at the end.
+
+One optimization that could be made is to ignore the 0.5 constant when calculating the area using the cross-product of 2 vertices. This is because we're normalizing the return value at the end, so the constant 0.5 will be canceled out. Another optimization is to directly add the cross product of 2 vertices to the return value, instead of calculating the product of area and normal; this is because the area is simply `cross(v1, v2) * 0.5`, which is canceled out again by the unit of the normal.
+
+The code portion looks as follows:
+```cpp
+Vector3D Vertex::normal(void) const
+{
+  Vector3D ret = Vector3D(0, 0, 0);
+  auto it = halfedge();
+  auto begin = it;
+  //https://cs184.eecs.berkeley.edu/sp20/lecture/8-24/meshes-and-geometry-processing
+  Vector3D a = this->position;
+  do {
+    Vector3D c = it->next()->vertex()->position;
+    it = it->twin()->next();
+    Vector3D b = it->next()->vertex()->position;
+    // relative vec of 2 edges
+    Vector3D e1 = b - a;
+    Vector3D e2 = c - a;
+    Vector3D normal = cross(e1, e2);
+    ret += normal;
+  } while (it != begin);
+  ret.normalize();
+  return ret;
+}
+```
+
 #### Show screenshots of dae/teapot.dae (not .bez) comparing teapot shading with and without vertex normals. Use Q to toggle default flat shading and Phong shading.
+
+<div align="middle">
+  <table style="width:100%">
+    <tr align="center">
+      <td>
+        <img src="images/p3_teapot_dae_flat_shading.png" align="middle" width="400px"/>
+        <figcaption>Flat shading</figcaption>
+      </td>
+      <td>
+        <img src="images/p3_teapot_dae_phong_shading.png" align="middle" width="400px"/>
+        <figcaption>Phong shading</figcaption>
+      </td>
+    </tr>
+    <br>
+  </table>
+</div>
+<br>
 
 ### Part 4: Edge Flip
 
