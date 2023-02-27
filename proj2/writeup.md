@@ -3,6 +3,8 @@
 
 ## Overview
 
+In this project, we implemented de Casteljau's algorithm to evaluate Bezier curves and surfaces, as well as a functional mesh editor that allows users to flip, split, and subdivide edges and faces of a mesh. The underlying mesh data structure is inspired by the half-edge data structure, the traversal of which powers the editing functions. The mesh editor is implemented in OpenGL and C++.
+
 ## Section I: Bezier Curves and Surfaces
 
 ### Part 1: Bezier Curves with 1D de Casteljau Subdivision
@@ -475,12 +477,181 @@ VertexIter HalfedgeMesh::splitEdge(EdgeIter e0)
 
 #### Briefly explain how you implemented the loop subdivision and describe any interesting implementation / debugging tricks you have used.
 
+Loop subdivision splits half-edges of a mesh, and flips edges connecting an old vertex and a new vertex to smoothen the mesh. Our implementation involves 5 steps:
+1. Caching (new) positions of existing vertices after loop subdivision. [^2]
+  - new positions are stored in `newPosition` field of `Vertex` class.
+2. Caching positions of new vertices after loop subdivision.
+  - new positions are stored in `newPosition` field of `EdgeIter` class.
+3. Creating new vertices, along with all other half-edge elements, by calling `splitEdge()` on all existing edges. 
+  - Once vertices are created, their positions are updated from the cache.
+4. Flipping edges connecting an old vertex and a new vertex.
+5. Updating positions of existing vertices from the cache.
+
+The code for loop subdivision is as follows:
+```cpp
+void MeshResampler::upsample(HalfedgeMesh& a_mesh)
+{
+  int old_v_size = a_mesh.nVertices();
+  int old_e_size = a_mesh.nEdges();
+  for (auto it_v = a_mesh.verticesBegin(); it_v != a_mesh.verticesEnd(); it_v++) { // iterate over all old vertices
+    double n = it_v->degree();
+    double u = n == 3 ? 3.f / 16.f : 3.f / (8.f * n);
+    ASSERT(u != 0)
+    auto it_he = it_v->halfedge(), it_he_begin = it_he;
+    Vector3D sum = 0;
+    do {
+      sum += it_he->twin()->vertex()->position;
+      it_he = it_he->twin()->next();
+    } while (it_he != it_he_begin);
+    it_v->newPosition = (1.f - (n * u)) * it_v->position + (u * sum);
+    it_v->isNew = false;
+  }
+  for (auto it_e = a_mesh.edgesBegin(); it_e != a_mesh.edgesEnd(); it_e++) { // iterate over all old edges
+    VertexIter a, b, c, d;
+    HalfedgeIter h = it_e->halfedge();
+    a = h->vertex();
+    b = h->twin()->vertex();
+    c = h->next()->twin()->vertex();
+    d = h->twin()->next()->twin()->vertex();
+    it_e->newPosition = 3.f / 8.f * (a->position + b->position) + 1.f / 8.f * (c->position + d->position);
+    it_e->isNew = false;
+  }
+
+  EdgeIter it_e = a_mesh.edgesBegin(); // iterator for step3&4
+  for (int i = 0; i < old_e_size; i++) { // iterate until the start of new edge
+    CGL::VertexIter v = a_mesh.splitEdge(it_e);
+    v->position = it_e->newPosition; // update position
+    it_e++;
+  }
+  for (; it_e != a_mesh.edgesEnd(); it_e++) { // iterate over all new edges
+    if (!it_e->isNew) {
+      continue;
+    }
+    auto it_he = it_e->halfedge();
+    if (it_he->vertex()->isNew != it_he->twin()->vertex()->isNew) {
+      a_mesh.flipEdge(it_e);
+    }
+  }
+  auto it_v = a_mesh.verticesBegin();
+  for (int i = 0; i < old_v_size; i++) {
+    ASSERT(!it_v->isNew)
+    it_v->position = it_v->newPosition;
+    it_v++;
+  }
+}
+```
+
+In addition, we flag the edges and vertices to be new in the `splitEdge()` function:
+```cpp
+VertexIter HalfedgeMesh::splitEdge(EdgeIter e0) {
+  ...
+  eb->isNew = true;
+  ec->isNew = true;
+  vx->isNew = true;
+  return vx;
+}
+```
+
+One interesting observation we made is that we would only flip new edges; thus we choose to use only one iterator for both step 3 and 4. For step 3, the iterator keeps iterating until it reaches the end of the all old edges, as signaled by a counter. For step 4, the iterator simply resumes iterating from the end of all old edges to the end of all edges, avoiding unnecessary iterations.
+
 #### Take some notes, as well as some screenshots, of your observations on how meshes behave after loop subdivision. What happens to sharp corners and edges? Can you reduce this effect by pre-splitting some edges?
+
+Meshes become much smoother after loop subdivision, at the cost of significant performance and losing sharper corners and edges as illustrated by the image below:
+
+Subdivision of teapot:
+<div align="middle">
+  <table style="width:100%">
+    <tr align="center">
+      <td>
+        <img src="images/p6_teapot_subdiv_0.png" align="middle" width="400px"/>
+        <figcaption>No subdivision</figcaption>
+      </td>
+      <td>
+        <img src="images/p6_teapot_subdiv_1.png" align="middle" width="400px"/>
+        <figcaption>Subdivide once</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr align="center">
+      <td>
+        <img src="images/p6_teapot_subdiv_2.png" align="middle" width="400px"/>
+        <figcaption>Subdivide twice</figcaption>
+      </td>
+      <td>
+        <img src="images/p6_teapot_subdiv_3.png" align="middle" width="400px"/>
+        <figcaption>Subdivide thrice</figcaption>
+      </td>
+    </tr>
+    <br>
+  </table>
+</div>
+<br>
+
+Subdivision of cube:
+<div align="middle">
+  <table style="width:100%">
+    <tr align="center">
+      <td>
+        <img src="images/p6_cube_subdiv_0.png" align="middle" width="400px"/>
+        <figcaption>No subdivision</figcaption>
+      </td>
+      <td>
+        <img src="images/p6_cube_subdiv_1.png" align="middle" width="400px"/>
+        <figcaption>Subdivide once</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr align="center">
+      <td>
+        <img src="images/p6_cube_subdiv_2.png" align="middle" width="400px"/>
+        <figcaption>Subdivide twice</figcaption>
+      </td>
+      <td>
+        <img src="images/p6_cube_subdiv_3.png" align="middle" width="400px"/>
+        <figcaption>Subdivide thrice</figcaption>
+      </td>
+    </tr>
+    <br>
+  </table>
+</div>
+<br>
+
+Notably, the originally sharp cube has become a rounded sphere. To reduce the effect, we can pre-split 6 edges, each on once face of the cube, the result of which is shown below:
+
+<div align="middle">
+  <table style="width:100%">
+    <tr align="center">
+      <td>
+        <img src="images/p6_cube_presplit_subdiv_0.png" align="middle" width="400px"/>
+        <figcaption>No subdivision</figcaption>
+      </td>
+      <td>
+        <img src="images/p6_cube_presplit_subdiv_1.png" align="middle" width="400px"/>
+        <figcaption>Subdivide once</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr align="center">
+      <td>
+        <img src="images/p6_cube_presplit_subdiv_2.png" align="middle" width="400px"/>
+        <figcaption>Subdivide twice</figcaption>
+      </td>
+      <td>
+        <img src="images/p6_cube_presplit_subdiv_3.png" align="middle" width="400px"/>
+        <figcaption>Subdivide thrice</figcaption>
+      </td>
+    </tr>
+    <br>
+  </table>
+</div>
+<br>
+
+This time, the cube has retained certain sharpness.
 
 #### Load dae/cube.dae. Perform several iterations of loop subdivision on the cube. Notice that the cube becomes slightly asymmetric after repeated subdivisions. Can you pre-process the cube with edge flips and splits so that the cube subdivides symmetrically? Document these effects and explain why they occur. Also explain how your pre-processing helps alleviate the effects.
 
-#### If you have implemented any extra credit extensions, explain what you did and document how they work with screenshots.
-
+The previous part already shows pre-splitting the edges on each face of the cube can help retain sharpness as well as symmetry. The assymetry occurs because the original cube is not symmetric along with z-axis when observing from the front(it is only symmetric along one diagonal). The original looked symmetric because at start, the diagonals each form two isosceles right triangles. The asymmetry becomes notable when we subdivide the edges to reveal the underlying geometry. To fix this, we can pre-split the diagonals of the cube in 2 as shown above; this will make the cube symmetric along both diagonals, and therefore symmetric along z-axis.
 
 
 [^1]: http://15462.courses.cs.cmu.edu/fall2015content/misc/HalfedgeEdgeOpImplementationGuide.pdf
+[^2]: https://cs184.eecs.berkeley.edu/sp23/lecture/8-39/mesh-representations-and-geometr
