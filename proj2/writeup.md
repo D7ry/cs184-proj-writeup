@@ -1,3 +1,4 @@
+https://github.com/D7ry/cs184-proj-writeup/blob/master/proj2/writeup.md
 # CS 184: Computer Graphics and Imaging, Spring 2023
 # Project 2: Mesh Edit
 
@@ -447,11 +448,11 @@ VertexIter HalfedgeMesh::splitEdge(EdgeIter e0)
     <tr align="center">
       <td>
         <img src="images/p5_max_before_split.png" align="middle" width="400px"/>
-        <figcaption>Before flip</figcaption>
+        <figcaption>Before split</figcaption>
       </td>
       <td>
         <img src="images/p5_max_after_split.png" align="middle" width="400px"/>
-        <figcaption>After filp</figcaption>
+        <figcaption>After split</figcaption>
       </td>
     </tr>
     <br>
