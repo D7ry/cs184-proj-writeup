@@ -1,6 +1,6 @@
 # CS 184: Computer Graphics and Imaging, Spring 2023
 # Project 3-1: Path Tracer
-## Website URL: todo
+## Website URL: https://github.com/D7ry/cs184-proj-writeup/blob/master/proj3-1/writeup.md
 
 ## Overview
 
