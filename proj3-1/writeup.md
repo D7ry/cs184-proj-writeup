@@ -110,7 +110,7 @@ auto rEnd = a_end;
 
 5. After getting the result of recursion, we expand the bounding box of the internal node to include the bounding boxes of its children.
 
-6. Finally, we return the internal node.
+6. Finally, we return the internal node. Note that we return the leaf node earlier on base case.
 
 ### Extra credit portion
 
@@ -291,11 +291,51 @@ For example, when we only sample 1 light ray from the whole area light, chances 
 
 ### Compare the results between uniform hemisphere sampling and lighting sampling in a one-paragraph analysis.
 
-Visually, lighting sampling produces much less noise under the same sampling configuration. 
+Visually, lighting sampling produces much less noise under the same sampling configuration. This is because lighting sampling directly samples from the light source and the sampled lights are more likely to hit the point. Lighting sampling also works for point lights, whereas for universal hemispheric sampling, we need an infinite number of samples to get a good approximation of the light source. Notably, both algorithms provide an unbiased approximation of the lighting under large sample counts.
+
 
 ## Part 4: Global Illumination
 
 ### Walk through your implementation of the indirect lighting function.
+
+Our implementation of indirect lightning function involves a recursive algorithm terminated by either maximum ray depth or the Russian Roulette method. The algorithm is as follows, implemented in `PathTracer::at_least_one_bounce_radiance` that calculates the radiance at `isect` intersected with ray `r`:
+
+1. We calculate the one-bounce radiance using our implementation of direct illumination in part 3:
+```cpp
+L_out += one_bounce_radiance(r, isect);
+```
+2. Then, we'll check if it's time to terminate the recursion(at base case or Russian Roulette):
+```cpp
+if (bang() || r.depth == 1) { return L_out;}
+```
+
+3. If it's not yet time to end the recursion, we cast a random ray from the intersection point; first we set up the ray:
+```cpp
+Vector3D next_wi; double next_pdf; Intersection next_isect;
+Vector3D next_rad = isect.bsdf->sample_f(w_out, &next_wi, &next_pdf);
+Ray next_r = Ray(hit_p, o2w * next_wi, INF_D, r.depth - 1);
+next_r.min_t = EPS_F;
+```
+`sample_f` stores a random direction into `next_wi` and the probability of sampling that direction into `next_pdf`. 
+
+4. Next, we try to cast the ray and, on ray hit, we recursively call the function to accumulate the radiance at the new hit point:
+```cpp
+if (bvh->intersect(next_r, &next_isect)) {
+  Vector3D next_L = at_least_one_bounce_radiance(next_r, next_isect); // invoke recursion
+  L_out += next_L * next_rad * next_wi.z / next_pdf / RL_CHANCE;
+}
+```
+at the end, L_out is divided by `RL_CHANCE` and `next_pdf`(if bvh intersects)to normalize the Russian roulette and sampling probabilities. 
+
+Since we reduce the ray depth on every new recursion, the recursion will terminate when the ray depth is 0, the Russian roulette ends the recursion, or the ray misses the scene. We can then safely assume that recursively calling `at_least_one_bounce_radiance` will return the radiance at the new hit point, which we then add to the current radiance.
+
+One special case is when the ray trace depth is set to 0, in which we simply return a 0 vector at the beginning of the function.
+```cpp
+if (r.depth == 0) return Vector3D(0, 0, 0);
+```
+
+This implementation guarantees to accumulate at least one bounce lighting for radiance >= 1.
+
 
 ### Show some images rendered with global (direct and indirect) illumination. Use 1024 samples per pixel.
 
@@ -303,17 +343,19 @@ Visually, lighting sampling produces much less noise under the same sampling con
   <table style="width:100%">
     <tr align="center">
       <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
-        <figcaption>example1.dae</figcaption>
+        <img src="images/q4_spheres_global.png" align="middle" width="400px"/>
+        <figcaption>CBspheres_lambertian.dae</figcaption>
       </td>
       <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
-        <figcaption>example2.dae</figcaption>
+        <img src="images/q4_bunny_global.png" align="middle" width="400px"/>
+        <figcaption>Cbbunny.dae</figcaption>
       </td>
     </tr>
   </table>
 </div>
 <br>
+
+**Note:** the above images have Russian roulette chance set to 1.0, meaning the recursion does not randomly terminate. The following images, however, are rendered with Russian roulette chance set to 0.4.
 
 ### Pick one scene and compare rendered views first with only direct illumination, then only indirect illumination. Use 1024 samples per pixel. (You will have to edit PathTracer::at_least_one_bounce_radiance(...) in your code to generate these views.)
 
@@ -321,7 +363,7 @@ Visually, lighting sampling produces much less noise under the same sampling con
   <table style="width:100%">
     <tr align="center">
       <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
+        <img src="images/q4_bunny_only_direct.png" align="middle" width="400px"/>
         <figcaption>Only direct illumination (example1.dae)</figcaption>
       </td>
       <td>
@@ -338,32 +380,34 @@ Visually, lighting sampling produces much less noise under the same sampling con
   <table style="width:100%">
     <tr align="center">
       <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
+        <img src="images/q4_bunny_max_depth_0.png" align="middle" width="400px"/>
         <figcaption>max_ray_depth = 0 (CBbunny.dae)</figcaption>
       </td>
       <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
+        <img src="images/q4_bunny_max_depth_1.png" align="middle" width="400px"/>
         <figcaption>max_ray_depth = 1 (CBbunny.dae)</figcaption>
       </td>
     </tr>
     <tr align="center">
       <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
+        <img src="images/q4_bunny_max_depth_2.png" align="middle" width="400px"/>
         <figcaption>max_ray_depth = 2 (CBbunny.dae)</figcaption>
       </td>
       <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
+        <img src="images/q4_bunny_max_depth_3.png" align="middle" width="400px"/>
         <figcaption>max_ray_depth = 3 (CBbunny.dae)</figcaption>
       </td>
     </tr>
     <tr align="center">
       <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
+        <img src="images/q4_bunny_max_depth_100.png" align="middle" width="400px"/>
         <figcaption>max_ray_depth = 100 (CBbunny.dae)</figcaption>
       </td>
     </tr>
   </table>
 </div>
+
+When max_ray_depth is 0 or 1, the render result is the same as 0-bounce and 1-bounce direct lighting. For max_ray_depth of 2 and above, the images start showing more and more subtle indirect(bounce) lighting. For example, the ceiling is lit by the bounce light from the floor as well as two walls, resulting in a tinge of red and blue on its either side(same as the rabbit). In addition, the rabbit's soft shadow becomes more smooth, a result of bounce-lighting from the walls, the rabbit itself, and the floor. The aforementioned subtlety is more apparent with higher max_ray_depth. Notably, however, global path tracing introduces some noise; this issue can be addressed by either increasing the Russian roulette survival rate(as demonstrated in the first 2 images with the survival rate set to 1.0), increasing the number of samples per pixel, or the adaptive sampling technique discussed in the next section.
 
 ### Pick one scene and compare rendered views with various sample-per-pixel rates, including at least 1, 2, 4, 8, 16, 64, and 1024. Use 4 light rays.
 
@@ -372,37 +416,37 @@ Visually, lighting sampling produces much less noise under the same sampling con
     <tr align="center">
       <td>
         <img src="images/your_file.png" align="middle" width="400px"/>
-        <figcaption>1 sample per pixel (example1.dae)</figcaption>
+        <figcaption>1 sample per pixel (CBSphere_lambertian.dae)</figcaption>
       </td>
       <td>
         <img src="images/your_file.png" align="middle" width="400px"/>
-        <figcaption>2 samples per pixel (example1.dae)</figcaption>
-      </td>
-    </tr>
-    <tr align="center">
-      <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
-        <figcaption>4 samples per pixel (example1.dae)</figcaption>
-      </td>
-      <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
-        <figcaption>8 samples per pixel (example1.dae)</figcaption>
+        <figcaption>2 samples per pixel (CBSphere_lambertian.dae)</figcaption>
       </td>
     </tr>
     <tr align="center">
       <td>
         <img src="images/your_file.png" align="middle" width="400px"/>
-        <figcaption>16 samples per pixel (example1.dae)</figcaption>
+        <figcaption>4 samples per pixel (CBSphere_lambertian.dae)</figcaption>
       </td>
       <td>
         <img src="images/your_file.png" align="middle" width="400px"/>
-        <figcaption>64 samples per pixel (example1.dae)</figcaption>
+        <figcaption>8 samples per pixel (CBSphere_lambertian.dae)</figcaption>
       </td>
     </tr>
     <tr align="center">
       <td>
         <img src="images/your_file.png" align="middle" width="400px"/>
-        <figcaption>1024 samples per pixel (example1.dae)</figcaption>
+        <figcaption>16 samples per pixel (CBSphere_lambertian.dae)</figcaption>
+      </td>
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>64 samples per pixel (CBSphere_lambertian.dae)</figcaption>
+      </td>
+    </tr>
+    <tr align="center">
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>1024 samples per pixel (CBSphere_lambertian.dae)</figcaption>
       </td>
     </tr>
   </table>
@@ -412,6 +456,33 @@ Visually, lighting sampling produces much less noise under the same sampling con
 
 ### Explain adaptive sampling. Walk through your implementation of the adaptive sampling.
 
+Ray-tracing through Monte-Carlo integration is very costly with large sample rate. Adaptive sampling reduces the cost of ray-tracing by sampling less the pixels that converge faster(i.e. less noise-prone). For example, adaptive sampling samples more the soft-shadow area of the previous rabbit image.
+
+Our implementation of adaptive sampling is a simple code snippet added in `PathTracer::raytrace_pixel()` function. We check the relationship between the standard deviation of total illumination, number of samples, and the `maxTolerance` variable:
+
+For every `samplePerBatch` samples, the following code snippet is executed:
+```cpp
+double n = i + 1; // how many samples we have so far
+double variance = (1.f / (n - 1.f)) * (s2 - (s1 * s1 / n));
+double sd = sqrt(variance);
+double mean = s1 / n;
+double I = 1.96 * sd / std::sqrt(n);
+if (I <= (maxTolerance * mean)) {
+  break;
+}
+```
+The 1.96 comes from the 95% confidence interval. The check intuitively makes sense, as we want either the standard deviation to be small or the number of samples to be large.
+
+In addition, we accumulate `s1` and `s2` for the standard deviation calculation for every sample:
+```cpp
+float illuym = est_radiance_global_illumination(sample_ray).illum();
+s1 += illuym;
+s2 += illuym * illuym;
+```
+
+Adaptive sampling allows us to focus on noisy pixels. The following images show the result of adaptive sampling as well as the sample rate illustrated by the color warmth.
+
+
 ### Pick two scenes and render them with at least 2048 samples per pixel. Show a good sampling rate image with clearly visible differences in sampling rate over various regions and pixels. Include both your sample rate image, which shows your how your adaptive sampling changes depending on which part of the image you are rendering, and your noise-free rendered result. Use 1 sample per light and at least 5 for max ray depth.
 
 <div align="middle">
@@ -419,22 +490,24 @@ Visually, lighting sampling produces much less noise under the same sampling con
     <tr align="center">
       <td>
         <img src="images/q5_bunny.png" align="middle" width="400px"/>
-        <figcaption>Rendered image (example1.dae)</figcaption>
+        <figcaption>Rendered image (bunny.dae)</figcaption>
       </td>
       <td>
         <img src="images/q5_bunny_rate.png" align="middle" width="400px"/>
-        <figcaption>Sample rate image (example1.dae)</figcaption>
+        <figcaption>Sample rate image (bunny.dae)</figcaption>
       </td>
     </tr>
     <tr align="center">
       <td>
         <img src="images/q5_sphere.png" align="middle" width="400px"/>
-        <figcaption>Rendered image (example2.dae)</figcaption>
+        <figcaption>Rendered image (sphere_lambertian.dae)</figcaption>
       </td>
       <td>
         <img src="images/q5_sphere_rate.png" align="middle" width="400px"/>
-        <figcaption>Sample rate image (example2.dae)</figcaption>
+        <figcaption>Sample rate image (sphere_lambertian.dae)</figcaption>
       </td>
     </tr>
   </table>
 </div>
+
+In the above images, the sampling rate is clearly higher in soft-shadow areas. This makes sense since the soft-shadow area is more noise-prone and requires more samples to converge. In comparison, areas with no shadows, for example, the walls, requires far less sample as illustrated by the cold colors in the sample rate image.
