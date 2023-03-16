@@ -348,7 +348,7 @@ This implementation guarantees to accumulate at least one bounce lighting for ra
       </td>
       <td>
         <img src="images/q4_bunny_global.png" align="middle" width="400px"/>
-        <figcaption>Cbbunny.dae</figcaption>
+        <figcaption>CbBunny.dae</figcaption>
       </td>
     </tr>
   </table>
@@ -363,16 +363,20 @@ This implementation guarantees to accumulate at least one bounce lighting for ra
   <table style="width:100%">
     <tr align="center">
       <td>
-        <img src="images/q4_bunny_only_direct.png" align="middle" width="400px"/>
+        <img src="images/q4_spheres_only_direct.png" align="middle" width="400px"/>
         <figcaption>Only direct illumination (example1.dae)</figcaption>
       </td>
       <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
+        <img src="images/q4_spheres_only_indirect.png" align="middle" width="400px"/>
         <figcaption>Only indirect illumination (example1.dae)</figcaption>
       </td>
     </tr>
   </table>
 </div>
+
+To achieve only indirect illumination, we prevent the algorithm from accumulating light when the ray depth is equal to maximum ray depth(i.e. start of recursion). We also comment out the zero_bounce_radiance function in est_radiance_global_illumination so the ceiling don't emit zero bounce lighting.
+
+Both image produce interesting result. When we render with only direct illumination, there is no bounce lighting, the ceiling and shaded areas of the balls are completely black. When we render with only indirect illumination, the ceiling is lit up by the light bounced up from the balls and the walls, and the balls' shaded areas are brighter than areas directly exposed to the light source. Intuitively, this happens because light directly reaching exposed areas are blocked by the algorithm, so the shaded areas turn out to be better lit. There is much more red and blue-ness on either sides of the balls, as they're lit primarily by the bounce lighting from the walls.
 
 ### For CBbunny.dae, compare rendered views with max_ray_depth set to 0, 1, 2, 3, and 100 (the -m flag). Use 1024 samples per pixel.
 
@@ -415,42 +419,44 @@ When max_ray_depth is 0 or 1, the render result is the same as 0-bounce and 1-bo
   <table style="width:100%">
     <tr align="center">
       <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
-        <figcaption>1 sample per pixel (CBSphere_lambertian.dae)</figcaption>
+        <img src="images/q4_spheres_pixel_rate_0001.png" align="middle" width="400px"/>
+        <figcaption>1 sample per pixel (CBSpheres_lambertian.dae)</figcaption>
       </td>
       <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
-        <figcaption>2 samples per pixel (CBSphere_lambertian.dae)</figcaption>
-      </td>
-    </tr>
-    <tr align="center">
-      <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
-        <figcaption>4 samples per pixel (CBSphere_lambertian.dae)</figcaption>
-      </td>
-      <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
-        <figcaption>8 samples per pixel (CBSphere_lambertian.dae)</figcaption>
+        <img src="images/q4_spheres_pixel_rate_0002.png" align="middle" width="400px"/>
+        <figcaption>2 samples per pixel (CBSpheres_lambertian.dae)</figcaption>
       </td>
     </tr>
     <tr align="center">
       <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
-        <figcaption>16 samples per pixel (CBSphere_lambertian.dae)</figcaption>
+        <img src="images/q4_spheres_pixel_rate_0004.png" align="middle" width="400px"/>
+        <figcaption>4 samples per pixel (CBSpheres_lambertian.dae)</figcaption>
       </td>
       <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
-        <figcaption>64 samples per pixel (CBSphere_lambertian.dae)</figcaption>
+        <img src="images/q4_spheres_pixel_rate_0008.png" align="middle" width="400px"/>
+        <figcaption>8 samples per pixel (CBSpheres_lambertian.dae)</figcaption>
       </td>
     </tr>
     <tr align="center">
       <td>
-        <img src="images/your_file.png" align="middle" width="400px"/>
-        <figcaption>1024 samples per pixel (CBSphere_lambertian.dae)</figcaption>
+        <img src="images/q4_spheres_pixel_rate_0016.png" align="middle" width="400px"/>
+        <figcaption>16 samples per pixel (CBSpheres_lambertian.dae)</figcaption>
+      </td>
+      <td>
+        <img src="images/q4_spheres_pixel_rate_0064.png" align="middle" width="400px"/>
+        <figcaption>64 samples per pixel (CBSpheres_lambertian.dae)</figcaption>
+      </td>
+    </tr>
+    <tr align="center">
+      <td>
+        <img src="images/q4_spheres_pixel_rate_1024.png" align="middle" width="400px"/>
+        <figcaption>1024 samples per pixel (CBSpheres_lambertian.dae)</figcaption>
       </td>
     </tr>
   </table>
 </div>
+
+Lower sample-per-pixel rates feature more "white" noise, where the color of the pixel is not consistent with its neighbors. The "white" noise gets smaller and more sparse as per pixel rates get large. This is because the sample rate is too small to evaluate a good average of lighting. Take the sides of the spheres, for example. The left and right sides of spheres in images with small sample rates are either completely dark or completely red/blue; for images with higher sample rates, the path tracer can collect bounce lighting from all directions and make a consistent average, whereas lower sample rates can only collect bounce lighting from a few directions.
 
 ## Part 5: Adaptive Sampling
 
@@ -458,7 +464,7 @@ When max_ray_depth is 0 or 1, the render result is the same as 0-bounce and 1-bo
 
 Ray-tracing through Monte-Carlo integration is very costly with large sample rate. Adaptive sampling reduces the cost of ray-tracing by sampling less the pixels that converge faster(i.e. less noise-prone). For example, adaptive sampling samples more the soft-shadow area of the previous rabbit image.
 
-Our implementation of adaptive sampling is a simple code snippet added in `PathTracer::raytrace_pixel()` function. We check the relationship between the standard deviation of total illumination, number of samples, and the `maxTolerance` variable:
+Our implementation of adaptive sampling is a simple code snippet added in `PathTracer::raytrace_pixel()` function. We check the relationship between the standard deviation of total illumination, number of samples, and the `maxTolerance` variable, by combining them into a an `I` value.
 
 For every `samplePerBatch` samples, the following code snippet is executed:
 ```cpp
