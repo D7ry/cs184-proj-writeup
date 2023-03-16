@@ -164,16 +164,65 @@ Image rendering time done with the help of BVH acceleration is significantly fas
 
 ### Walk through both implementations of the direct lighting function.
 
-
 #### Hemispheric Lighting
+
+The hemispheric lighting implementation samples random points on the hemisphere centered at the intersection point between the ray and the primitive, whose normal is used as the hemisphere's axis: 
+```cpp
+Vector3D wi_sample hemisphereSampler->get_sample();
+```
+Additional rays are then cast from the intersection point to the hemisphere points. If the ray intersects with any primitive, we add the contribution of the light to the color of the intersection point, using the Monte Carlo integration method:
+```cpp
+if (bvh->intersect(r, &i_isect)) {
+  CGL::Vector3D lighting = i_isect.bsdf->get_emission() * isect.bsdf->f(w_out, wi_sample) * wi_sample.z;
+  L_out += lighting;
+  // wi_sample.z is the cosine
+}
+```
+Once we sample `num_samples` rays, we divide the accumulated lighting by `num_samples` to get the average lighting; in addition, we multiply the lighting by `2*PI` as the probability of sampling a point on the hemisphere is `1/(2*PI)`. We delay this multiplication to the end to save performance.
 
 #### Importance Lighting
 
+Instead of casting random rays from the intersection, importance lighting impl samples light sources in the existing scene, casting rays from the light source to the intersection point. Similarly, the light is then added to the color of the intersection point using the Monte Carlo integration method:
 
+The following steps demonstrate a single pass of the importance lighting algorithm, performed on a single light source:
 
+First, determine how many samples to perform on the light source. If the light source is a delta light, we don't need to sample it multiple times, as the light is only emitted from a single point.
+```cpp
+int sample_rep = light->is_delta_light() ? 1 : ns_area_light;
+```
+
+Then, sample `samlpe_rep` amount of rays and accumulate the lighting:
+```cpp
+Vector3D light_sample_avg = Vector3D(0.0);
+for (int i = 0; i < sample_rep; i++) {
+  Vector3D sample_light = light->sample_L(hit_p, &wi, &distToLight, &pdf);
+  Ray r = Ray(hit_p, wi, distToLight - EPS_F);
+  r.min_t = EPS_F;
+  Intersection sample_intersect;
+}
+```
+
+Note that here, the light source contributes to the intersection point only when no other primitives is in between them:
+
+```cpp
+if (!bvh->intersect(r, &sample_intersect)) {					
+  light_sample_avg +=  // your fav monte carlo integration
+    (isect.bsdf->f(w_out, w2o * wi)
+    * sample_light
+    * (w2o * wi).z)
+      / pdf;
+}
+light_sample_avg /= sample_rep;
+```
+
+Finally, we average out the lighting from all light sources
+```cpp
+L_out /= scene->lights.size();
+```
+
+### Show some images rendered with both implementations of the direct lighting function.
 <div align="middle">
   <table style="width:100%">
-    <!-- Header -->
     <tr align="center">
       <th>
         <b>Uniform Hemisphere Sampling</b>
@@ -208,3 +257,184 @@ Image rendering time done with the help of BVH acceleration is significantly fas
   </table>
 </div>
 <br>
+
+### Focus on one particular scene with at least one area light and compare the noise levels in soft shadows when rendering with 1, 4, 16, and 64 light rays (the -l flag) and with 1 sample per pixel (the -s flag) using light sampling, not uniform hemisphere sampling.
+
+<div align="middle">
+  <table style="width:100%">
+    <tr align="center">
+      <td>
+        <img src="images/q3_bunny_lightraycomp_1.png" align="middle" width="400px"/>
+        <figcaption>1 Light Ray (CBbunny.dae)</figcaption>
+      </td>
+      <td>
+        <img src="images/q3_bunny_lightraycomp_4.png" align="middle" width="400px"/>
+        <figcaption>4 Light Rays (CBbunny.dae)</figcaption>
+      </td>
+    </tr>
+    <tr align="center">
+      <td>
+        <img src="images/q3_bunny_lightraycomp_16.png" align="middle" width="400px"/>
+        <figcaption>16 Light Rays (CBbunny.dae)</figcaption>
+      </td>
+      <td>
+        <img src="images/q3_bunny_lightraycomp_64.png" align="middle" width="400px"/>
+        <figcaption>64 Light Rays (CBbunny.dae)</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+The noise level in soft shadows is significantly more noticeable at lower light ray count, and has been greatly reduced at higher light ray counts. This is because the areas supposed to be in soft shadow are much less likely to be in direct contact with the light rays cast from a point sampled from area lights. 
+
+For example, when we only sample 1 light ray from the whole area light, chances are that the light ray is going to be occluded by the bunny. Even if the light ray hits the soft shadow area, the contribution of light from this one hit will account for the entire lighting of the hit point, leading to a soft shadow area that is much more noisy and not as smooth.
+
+### Compare the results between uniform hemisphere sampling and lighting sampling in a one-paragraph analysis.
+
+Visually, lighting sampling produces much less noise under the same sampling configuration. 
+
+## Part 4: Global Illumination
+
+### Walk through your implementation of the indirect lighting function.
+
+### Show some images rendered with global (direct and indirect) illumination. Use 1024 samples per pixel.
+
+<div align="middle">
+  <table style="width:100%">
+    <tr align="center">
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>example1.dae</figcaption>
+      </td>
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>example2.dae</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+<br>
+
+### Pick one scene and compare rendered views first with only direct illumination, then only indirect illumination. Use 1024 samples per pixel. (You will have to edit PathTracer::at_least_one_bounce_radiance(...) in your code to generate these views.)
+
+<div align="middle">
+  <table style="width:100%">
+    <tr align="center">
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>Only direct illumination (example1.dae)</figcaption>
+      </td>
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>Only indirect illumination (example1.dae)</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+### For CBbunny.dae, compare rendered views with max_ray_depth set to 0, 1, 2, 3, and 100 (the -m flag). Use 1024 samples per pixel.
+
+<div align="middle">
+  <table style="width:100%">
+    <tr align="center">
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>max_ray_depth = 0 (CBbunny.dae)</figcaption>
+      </td>
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>max_ray_depth = 1 (CBbunny.dae)</figcaption>
+      </td>
+    </tr>
+    <tr align="center">
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>max_ray_depth = 2 (CBbunny.dae)</figcaption>
+      </td>
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>max_ray_depth = 3 (CBbunny.dae)</figcaption>
+      </td>
+    </tr>
+    <tr align="center">
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>max_ray_depth = 100 (CBbunny.dae)</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+### Pick one scene and compare rendered views with various sample-per-pixel rates, including at least 1, 2, 4, 8, 16, 64, and 1024. Use 4 light rays.
+
+<div align="middle">
+  <table style="width:100%">
+    <tr align="center">
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>1 sample per pixel (example1.dae)</figcaption>
+      </td>
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>2 samples per pixel (example1.dae)</figcaption>
+      </td>
+    </tr>
+    <tr align="center">
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>4 samples per pixel (example1.dae)</figcaption>
+      </td>
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>8 samples per pixel (example1.dae)</figcaption>
+      </td>
+    </tr>
+    <tr align="center">
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>16 samples per pixel (example1.dae)</figcaption>
+      </td>
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>64 samples per pixel (example1.dae)</figcaption>
+      </td>
+    </tr>
+    <tr align="center">
+      <td>
+        <img src="images/your_file.png" align="middle" width="400px"/>
+        <figcaption>1024 samples per pixel (example1.dae)</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+## Part 5: Adaptive Sampling
+
+### Explain adaptive sampling. Walk through your implementation of the adaptive sampling.
+
+### Pick two scenes and render them with at least 2048 samples per pixel. Show a good sampling rate image with clearly visible differences in sampling rate over various regions and pixels. Include both your sample rate image, which shows your how your adaptive sampling changes depending on which part of the image you are rendering, and your noise-free rendered result. Use 1 sample per light and at least 5 for max ray depth.
+
+<div align="middle">
+  <table style="width:100%">
+    <tr align="center">
+      <td>
+        <img src="images/q5_bunny.png" align="middle" width="400px"/>
+        <figcaption>Rendered image (example1.dae)</figcaption>
+      </td>
+      <td>
+        <img src="images/q5_bunny_rate.png" align="middle" width="400px"/>
+        <figcaption>Sample rate image (example1.dae)</figcaption>
+      </td>
+    </tr>
+    <tr align="center">
+      <td>
+        <img src="images/q5_sphere.png" align="middle" width="400px"/>
+        <figcaption>Rendered image (example2.dae)</figcaption>
+      </td>
+      <td>
+        <img src="images/q5_sphere_rate.png" align="middle" width="400px"/>
+        <figcaption>Sample rate image (example2.dae)</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
