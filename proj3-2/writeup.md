@@ -1,4 +1,4 @@
-url: TODO
+url: https://github.com/D7ry/cs184-proj-writeup/blob/master/proj3-2/writeup.md
 
 # Assignment 3-2: Additional Features to PathTracer
 
@@ -50,9 +50,6 @@ The thin-lens camera model assumes that lights pass through a thin len and then 
 The following images have incrementing focus distances from 4.5 to 5.1, 0.2 at a time. 
 
 <html>
-  <head>
-    <title>Images in Table</title>
-  </head>
   <body>
     <table>
       <tr>
@@ -72,9 +69,6 @@ The following images have incrementing focus distances from 4.5 to 5.1, 0.2 at a
 The following images have incrementing aperture sizes from 0.11 to 0.29, incrementing by 0.06 at a time.
 
 <html>
-  <head>
-    <title>Images in Table</title>
-  </head>
   <body>
     <table>
       <tr>
