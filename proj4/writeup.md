@@ -118,7 +118,90 @@ see above.
 </table>
 
 ## Part III: Handling collisions with other objects
+### Show us screenshots of your shaded cloth from scene/sphere.json in its final resting state on the sphere using the default ks = 5000 as well as with ks = 500 and ks = 50000. Describe the differences in the results.
+
+<table>
+  <tr>
+    <td align="center">
+	<img src="images/p3_sphere_ks_500.png" width="400px">
+	        <figcaption>ks = 500</figcaption>
+	</td>
+    <td align="center">
+	<img src="images/p3_sphere_ks_5000.png" width="400px">
+	        <figcaption>ks = 5000</figcaption>
+	</td>
+	<td align="center">
+	<img src="images/p3_sphere_ks_50000.png" width="400px">
+	        <figcaption>ks = 50000</figcaption>
+	</td>
+  </tr>
+</table>
+
+Simulations with lower ks appears to be less stiff and more soggy. The cloth drapes more loosely on the sphere. Simulations with high ks(50000) looks very stiff and crisp, and the cloth drapes very tightly on the sphere, with most part "folding" together on one of the 4 sides, with much fewer folds.
+
+### Show us a screenshot of your shaded cloth lying peacefully at rest on the plane. If you haven't by now, feel free to express your colorful creativity with the cloth! (You will need to complete the shaders portion first to show custom colors.)
+
 
 ## Part IV: Handling self-collisions
+
+
+### Show us at least 3 screenshots that document how your cloth falls and folds on itself, starting with an early, initial self-collision and ending with the cloth at a more restful state (even if it is still slightly bouncy on the ground).
+
+<table>
+  <tr>
+    <td align="center">
+	<img src="images/p4_collision_1.png" width="400px">
+	</td>
+    <td align="center">
+	<img src="images/p4_collision_2.png" width="400px">
+	</td>
+	<td align="center">
+	<img src="images/p4_collision_3.png" width="400px">
+	</td>
+  </tr>
+</table>
+
+
+### Vary the density as well as ks and describe with words and screenshots how they affect the behavior of the cloth as it falls on itself.
+
+Higher density makes the cloth heavier, and it tends to collapse onto itself more, lower density makes the cloth lighter and it tends to spread out more. The fold is also more pronounced with higher density.
+
+<table>
+  <tr>
+    <td align="center">
+	<img src="images/p4_density_low.png" width="400px">
+		        <figcaption>low density</figcaption>
+	</td>
+    <td align="center">
+	<img src="images/p4_density_default.png" width="400px">
+			        <figcaption>default density</figcaption>
+	</td>
+	<td align="center">
+	<img src="images/p4_density_high.png" width="400px">
+				        <figcaption>high density</figcaption>
+	</td>
+  </tr>
+</table>
+
+Variation in ks affects the speed of the cloth's collapse. Higher ks makes the cloth collapse faster, lower ks makes the cloth collapse slower, as the cloth has less force to pull itself together. The following 3 images are taken 5 seconds into the simulation; cloth with higher ks appears to be "folding" more quickly and looks more "crisp" due to the more pronounced folds as a result of the higher ks. Cloth with low ks looks as if it's having a hard time pulling itself together.
+
+<table>
+  <tr>
+    <td align="center">
+	<img src="images/p4_ks_low.png" width="400px">
+		        <figcaption>low ks</figcaption>
+	</td>
+    <td align="center">
+	<img src="images/p4_ks_default.png" width="400px">
+			        <figcaption>default ks</figcaption>
+	</td>
+	<td align="center">
+	<img src="images/p4_ks_high.png" width="400px">
+				        <figcaption>high ks</figcaption>
+	</td>
+  </tr>
+</table>
+
+
 
 ## Part V: Shaders
