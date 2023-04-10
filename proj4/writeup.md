@@ -1,4 +1,4 @@
-
+url: https://github.com/D7ry/cs184-proj-writeup/blob/master/proj4/writeup.md
 
 # CS 184: Computer Graphics and Imaging, Spring 2023
 # Project 4: Cloth Simulator
