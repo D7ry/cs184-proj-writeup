@@ -141,6 +141,14 @@ Simulations with lower ks appears to be less stiff and more soggy. The cloth dra
 
 ### Show us a screenshot of your shaded cloth lying peacefully at rest on the plane. If you haven't by now, feel free to express your colorful creativity with the cloth! (You will need to complete the shaders portion first to show custom colors.)
 
+<table>
+<tr>
+	<td align="center">
+	<img src="images/p3_peacefully_lying.png" width="400px">
+	<figcaption>peace</figcaption>
+	</td>
+</tr>
+</table>
 
 ## Part IV: Handling self-collisions
 
@@ -205,3 +213,112 @@ Variation in ks affects the speed of the cloth's collapse. Higher ks makes the c
 
 
 ## Part V: Shaders
+
+### Explain in your own words what is a shader program and how vertex and fragment shaders work together to create lighting and material effects.
+
+A shader program is a program, typically run by GPU, that takes in a vertex or a fragment and a bunch of parameters, and outputs how the vertex or fragment should be rendered. 
+
+Vertex and fragment shaders are the two main components of the shader program. Vertex shaders process individual vertices of a 3D mesh, outputting their position and shading properties such as color and texture. Fragment shaders process fragments of vertex shader's outputs, for example, pixels, and output the final color of the pixel, which is then rendered on the screen.
+
+### Explain the Blinn-Phong shading model in your own words. Show a screenshot of your Blinn-Phong shader outputting only the ambient component, a screen shot only outputting the diffuse component, a screen shot only outputting the specular component, and one using the entire Blinn-Phong model.
+
+The Blinn-Phong shading model is a superset of diffuse shading. Blinn-Phong shading comprises 3 parts: diffuse lighting, ambient lighting, and specular lighting. Diffuse lighting is the most basic reflection from an object, while specular lighting depends on the camera angle, and ambient lighting is the light that is reflected from the environment. Together, the 3 lighting components creates a realistic rendering of the object.
+
+<table>
+  <tr>
+    <td align="center">
+	<img src="images/p5_phong_ambient.png" width="400px">
+		        <figcaption>Only ambient</figcaption>
+	</td>
+    <td align="center">
+	<img src="images/p5_phong_diffuse.png" width="400px">
+			        <figcaption>Only diffuse</figcaption>
+	</td>
+	<td align="center">
+	<img src="images/p5_phong_specular.png" width="400px">
+				        <figcaption>Only specular</figcaption>
+	</td>
+  </tr>
+</table>
+
+<table>
+<tr>
+	<td align="center">
+	<img src="images/p5_phong_all.png" width="400px">
+		        <figcaption>Ambient, diffuse, and specular</figcaption>
+	</td>
+</tr>
+</table>
+
+### Show a screenshot of your texture mapping shader using your own custom texture by modifying the textures in /textures/.
+<table>
+<tr>
+	<td align="center">
+	<img src="images/p5_texture_modified.png" width="400px">
+	<figcaption>Modified texture</figcaption>
+	</td>
+</tr>
+</table>
+
+### Show a screenshot of bump mapping on the cloth and on the sphere. 
+
+<table>
+  <tr>
+	<td align="center">
+	<img src="images/p5_bump_cloth.png" width="400px">
+		        <figcaption>Bump mapping on cloth</figcaption>
+	</td>
+	<td align="center">
+	<img src="images/p5_bump_sphere.png" width="400px">
+			        <figcaption>Bump mapping on sphere</figcaption>
+	</td>
+  </tr>
+  </table>
+
+### Show a screenshot of displacement mapping on the sphere. Use the same texture for both renders. You can either provide your own texture or use one of the ones in the textures directory, BUT choose one that's not the default texture_2.png. 
+
+<table>
+<tr>
+	<td align="center">
+	<img src="images/p5_displacement_sphere.png" width="400px">
+		        <figcaption>Displacement mapping on sphere</figcaption>
+	</td>
+</tr>
+</table>
+
+
+### Compare the two approaches and resulting renders in your own words. 
+
+While both approaches give the illusion of a 3D object, bump mapping provides a more stable and less "3D" appearance than displacement mapping. Displacement mapping is more "3D", but may look weird depending on the depth of the displacement, as it directly changes vertex positions. Bump mapping is more stable, but may look less "3D" depending on the strength of the bump. Both react to light.
+
+### Compare how your the two shaders react to the sphere by changing the sphere mesh's coarseness by using -o 16 -a 16 and then -o 128 -a 128.
+
+<table>
+  <tr>
+    <td align="center">
+	<img src="images/p5_low_res_bump.png" width="400px">
+		        <figcaption>16 * 16, bump</figcaption>
+	</td>
+    <td align="center">
+	<img src="images/p5_low_res_displacement.png" width="400px">
+			        <figcaption>16 * 16, displacement</figcaption>
+
+  </tr>
+  <tr>
+  	</td>
+	<td align="center">
+	<img src="images/p5_high_res_bump.png" width="400px">
+				        <figcaption>128 * 128, bump</figcaption>
+	</td>
+	  	</td>
+	<td align="center">
+	<img src="images/p5_high_res_displacement.png" width="400px">
+				        <figcaption>128 * 128, displacement</figcaption>
+	</td>
+	</tr>
+</table>
+
+Per the above comparison, changes in coarseness manifest most clearly on the displacement shader. The higher resolution the sphere has, the more protrusion i.e. 3D-ness the displacement shader shows. The bump shader, on the other hand, is more stable and less affected by coarseness. If one look very closely, the bump shader does show some extra details on the higher resolution sphere, but it is not as pronounced as the displacement shader.
+
+
+### Show a screenshot of your mirror shader on the cloth and on the sphere.
