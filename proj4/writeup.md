@@ -1,3 +1,5 @@
+
+
 # CS 184: Computer Graphics and Imaging, Spring 2023
 # Project 4: Cloth Simulator
 
@@ -322,3 +324,20 @@ Per the above comparison, changes in coarseness manifest most clearly on the dis
 
 
 ### Show a screenshot of your mirror shader on the cloth and on the sphere.
+
+<table>
+  <tr>
+    <td align="center">
+	<img src="images/p5_mirror_cloth.png" width="400px">
+		        <figcaption>Cloth</figcaption>
+	</td>
+    <td align="center">
+	<img src="images/p5_mirror_sphere.png" width="400px">
+			        <figcaption>Sphere</figcaption>
+	</td>
+	<td align="center">
+	<img src="images/p5_mirror_cloth_on_sphere.png" width="400px">
+				        <figcaption>Cloth on the sphere</figcaption>
+	</td>
+  </tr>
+</table>
